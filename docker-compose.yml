@@ -21,7 +21,7 @@ services:
     volumes:
       - ./frontend:/app/frontend
     working_dir: /app/frontend
-    command: ["npm", "start"]
+    command: ["sh", "-c", "npm install && npm start"]
     ports:
       - "3000:3000"
     depends_on:

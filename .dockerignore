@@ -1,0 +1,13 @@
+# Ignorar node_modules
+node_modules/
+frontend/node_modules/
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar archivos de configuración local
+*.env
+*.md
+
+# Ignorar directorios o archivos no necesarios
+.DS_Store
