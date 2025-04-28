@@ -61,7 +61,7 @@ class Empleado(models.Model):
     telefono = models.CharField(max_length=20)
     cargo = models.CharField(max_length=100, null=True, blank=True)
     fecha_ingreso = models.DateField(auto_now_add=True)
-    correo_personal = models.EmailField(max_length=254)
+    correo_personal = models.EmailField(max_length=254, null=True, blank=True)
     user_id = models.OneToOneField(User, on_delete=models.CASCADE, 
                                    related_name='empleado', blank=True)
     departamento_id =models.ForeignKey('departamento.Departamento',
