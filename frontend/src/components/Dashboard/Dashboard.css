@@ -1,0 +1,119 @@
+/* Estilo general del contenedor del dashboard */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Barra lateral */
+.sidebar {
+    background-color: var(--sidebar-bg, #0077B6); /* Color dinámico */
+    color: var(--sidebar-text, #ffffff); /* Color dinámico */
+    width: 250px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    transition: width 0.3s ease-in-out;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar ul li:hover {
+    background-color: var(--sidebar-hover-bg, #005f8a);
+    color: var(--sidebar-hover-text, #ffffff);
+}
+
+.sidebar ul li i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.sidebar ul li span {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Contenido principal */
+.content-wrapper {
+    margin-left: 250px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.sidebar.collapsed + .content-wrapper {
+    margin-left: 70px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: var(--content-bg, #f8f9fa);
+    color: var(--content-text, #212529);
+}
+
+/* TopNavbar */
+.top-navbar {
+    background-color: var(--navbar-bg, #0077B6);
+    color: var(--navbar-text, #ffffff);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Diseño responsivo */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        width: 70px;
+    }
+
+    .sidebar.collapsed {
+        width: 0;
+    }
+
+    .content-wrapper {
+        margin-left: 70px;
+    }
+
+    .sidebar.collapsed + .content-wrapper {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .top-navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+}

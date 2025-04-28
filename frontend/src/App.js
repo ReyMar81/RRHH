@@ -1,25 +1,31 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import Dashboard from './components/Dashboard/Dashboard';
+import Login from './components/Login/Login';
+import Departamentos from './pages/Departamentos';
+import Empleados from './pages/Empleados';
+import Nomina from './pages/Nomina';
+import Perfiles from './pages/Perfiles';
+import Vacaciones from './pages/Vacaciones';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <ThemeProvider>
+            <Router>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/dashboard" element={<Dashboard />}>
+                        <Route path="empleados" element={<Empleados />} />
+                        <Route path="departamentos" element={<Departamentos />} />
+                        <Route path="nomina" element={<Nomina />} />
+                        <Route path="vacaciones" element={<Vacaciones />} />
+                        <Route path="perfiles" element={<Perfiles />} />
+                    </Route>
+                </Routes>
+            </Router>
+        </ThemeProvider>
+    );
 }
 
 export default App;
