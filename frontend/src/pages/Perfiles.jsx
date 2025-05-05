@@ -2,19 +2,16 @@
 import React from 'react';
 import { Card, Table, Button, Form, Row, Col } from 'react-bootstrap';
 import { FaUserEdit, FaIdCard, FaFile } from 'react-icons/fa';
-import { useTheme } from '../contexts/ThemeContext';
+// Datos de ejemplo para perfiles
+const perfiles = [
+    { id: 1, tipo: 'Administrador', descripcion: 'Acceso completo al sistema', permisos: 'Todos los módulos' },
+    { id: 2, tipo: 'Gerente RH', descripcion: 'Gestión de personal y departamentos', permisos: 'Empleados, Departamentos, Reportes' },
+    { id: 3, tipo: 'Especialista Nómina', descripcion: 'Gestión de pagos y nóminas', permisos: 'Nómina, Reportes básicos' },
+    { id: 4, tipo: 'Coordinador', descripcion: 'Gestión de vacaciones y permisos', permisos: 'Vacaciones, Perfiles básicos' },
+    { id: 5, tipo: 'Empleado', descripcion: 'Visualización de datos personales', permisos: 'Perfil propio, Solicitudes' }
+];
 
 const Perfiles = () => {
-    const { theme } = useTheme();
-
-    // Datos de ejemplo para perfiles
-    const perfiles = [
-        { id: 1, tipo: 'Administrador', descripcion: 'Acceso completo al sistema', permisos: 'Todos los módulos' },
-        { id: 2, tipo: 'Gerente RH', descripcion: 'Gestión de personal y departamentos', permisos: 'Empleados, Departamentos, Reportes' },
-        { id: 3, tipo: 'Especialista Nómina', descripcion: 'Gestión de pagos y nóminas', permisos: 'Nómina, Reportes básicos' },
-        { id: 4, tipo: 'Coordinador', descripcion: 'Gestión de vacaciones y permisos', permisos: 'Vacaciones, Perfiles básicos' },
-        { id: 5, tipo: 'Empleado', descripcion: 'Visualización de datos personales', permisos: 'Perfil propio, Solicitudes' }
-    ];
 
     return (
         <div>
@@ -25,11 +22,7 @@ const Perfiles = () => {
                 </Button>
             </div>
 
-            <Card style={{
-                backgroundColor: theme.name === 'dark' ? theme.colors.dark : theme.colors.light,
-                color: theme.colors.text,
-                marginBottom: '20px'
-            }}>
+            <Card className="perfiles-card mb-3">
                 <Card.Body>
                     <Row>
                         <Col md={6}>
@@ -38,24 +31,13 @@ const Perfiles = () => {
                                 <Form.Control
                                     type="text"
                                     placeholder="Buscar..."
-                                    style={{
-                                        backgroundColor: theme.name === 'dark' ? theme.colors.dark : theme.colors.light,
-                                        color: theme.colors.text,
-                                        borderColor: theme.name === 'dark' ? theme.colors.secondary : '#ced4da'
-                                    }}
                                 />
                             </Form.Group>
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Filtrar por tipo</Form.Label>
-                                <Form.Select
-                                    style={{
-                                        backgroundColor: theme.name === 'dark' ? theme.colors.dark : theme.colors.light,
-                                        color: theme.colors.text,
-                                        borderColor: theme.name === 'dark' ? theme.colors.secondary : '#ced4da'
-                                    }}
-                                >
+                                <Form.Select>
                                     <option value="">Todos los perfiles</option>
                                     <option value="admin">Administrador</option>
                                     <option value="gerente">Gerente RH</option>
@@ -69,19 +51,13 @@ const Perfiles = () => {
                 </Card.Body>
             </Card>
 
-            <Card style={{
-                backgroundColor: theme.name === 'dark' ? theme.colors.dark : theme.colors.light,
-                color: theme.colors.text
-            }}>
+            <Card className="perfiles-card">
                 <Card.Body>
                     <Table
                         responsive
                         hover
                         striped
-                        style={{
-                            color: theme.colors.text,
-                            borderColor: theme.name === 'dark' ? theme.colors.secondary : theme.colors.light
-                        }}
+                        className="perfiles-table"
                     >
                         <thead>
                             <tr>
