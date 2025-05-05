@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 import './Login.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate(); // Inicializar useNavigate
+
+    // Lista de usuarios válidos
+    const validUsers = {
+        admin: 'admin123',
+        fernando: 'fernando123',
+        reymar: 'reymar123',
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Attempting login with:', username, password);
-        // Add your authentication logic here
+
+        // Validar credenciales
+        if (validUsers[username] && validUsers[username] === password) {
+            console.log('Login exitoso:', username);
+            setErrorMessage('');
+            navigate('/dashboard'); // Redirigir al Dashboard
+        } else {
+            setErrorMessage('Nombre de usuario o contraseña incorrectos.');
+        }
     };
 
     return (
@@ -29,6 +46,7 @@ const Login = () => {
                                 id="username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                required
                             />
                             <span className="icon user-icon">👤</span>
                         </div>
@@ -42,6 +60,7 @@ const Login = () => {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                required
                             />
                             <button
                                 type="button"
@@ -53,10 +72,11 @@ const Login = () => {
                         </div>
                     </div>
 
+                    {errorMessage && <p className="error-message">{errorMessage}</p>}
+
                     <button type="submit" className="login-button">
                         INICIAR SESIÓN
                     </button>
-
                 </form>
             </div>
         </div>
