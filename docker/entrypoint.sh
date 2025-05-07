@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Solo crear el proyecto si no existe manage.py
 if [ ! -f "/app/backend/manage.py" ]; then
   echo "🛠️ Creando proyecto Django..."
