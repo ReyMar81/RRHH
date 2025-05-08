@@ -1,11 +1,9 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from .models import Empleado
 from .serializer import EmpleadoSerializers
-
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated
-from django.utils.crypto import get_random_string
+from .service import crear_empleado_con_usuario
+from rest_framework.response import Response
 
 # Create your views here.
 
@@ -14,37 +12,12 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializers
 
-    def perform_create(self, serializer):
-        ci = serializer.validated_data['ci']
-        apellidos = serializer.validated_data['apellidos']
-        username = f'{ci}.{self.iniciales(apellidos)}'
-        email = f'{username}@rrhh.com'
-        password = get_random_string(12)
-        
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=serializer.validated_data['nombre'],
-            last_name=apellidos,
-        )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # Guardar empleado con el usuario creado
-        empleado = serializer.save(user_id=user)
+        empleado, username, password = crear_empleado_con_usuario(serializer.validated_data)
 
-        # Enviar correo con las credenciales
-        send_mail(
-            subject='Tu cuenta ha sido creada',
-            message=f"""Hola {empleado.nombre},\n\n
-            Tu cuenta ha sido creada. \n
-            Username: {username}\n
-            Password: {password}""",
-            from_email='no-reply@miempresa.com',
-            recipient_list=[empleado.correo_personal],
-            fail_silently=False,
-        )
-
-    def iniciales(self, apellidos: str):
-        lista_apellidos = apellidos.split()
-        iniciales = ''.join([apellido[0].upper() for apellido in lista_apellidos])
-        return iniciales
+        response_data = self.get_serializer(empleado).data
+        response_data.update({'username': username, 'password': password})
+        return Response(response_data, status=status.HTTP_201_CREATED)

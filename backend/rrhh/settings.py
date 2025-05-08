@@ -150,3 +150,5 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True  # (o solo los necesarios en producción)
 
 AUTH_USER_MODEL = 'auth.User'  # Esto debería ser el valor predeterminado
+# Configuración de email para desarrollo (muestra los correos en consola)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
