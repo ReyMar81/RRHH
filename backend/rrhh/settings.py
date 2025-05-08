@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure--gqr6v^@9-uymdva&psdkhp@mvam)jc(4#6do1$t3#dt9u#61i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     
     'corsheaders',
     'rest_framework',
-    
-    #Apps Propias
-    'apps.empleados',
+    'drf_spectacular',
+    #Apps Propias   
+    'apps.empleado',
     'apps.documento',
     'apps.departamento',
 ]
@@ -69,6 +69,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -135,6 +136,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 # Modificaciones propias
 CORS_ALLOW_ALL_ORIGINS = True  # (o solo los necesarios en producción)

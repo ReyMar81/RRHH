@@ -4,10 +4,12 @@ from .serializer import EmpleadoSerializers
 
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 
 class EmpleadoViewSets(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializers
     

@@ -3,8 +3,6 @@ from rest_framework.routers import DefaultRouter
 from .views import DepartamentoViewSet
 
 router = DefaultRouter()
-router.register(r'', DepartamentoViewSet)
+router.register(r'departamentos', DepartamentoViewSet)
 
-urlpatterns = [
-    path('', include(router.urls)),
-]
+urlpatterns = router.urls

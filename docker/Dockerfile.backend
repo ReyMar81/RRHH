@@ -8,7 +8,7 @@ WORKDIR /app
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r backend/requirements.txt
-
+RUN pip install drf-spectacular[swagger-ui]==0.28.0
 COPY . .
 
 # Gunicorn (comentado para producción futura)

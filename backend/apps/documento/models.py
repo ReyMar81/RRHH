@@ -31,6 +31,6 @@ class Documento(models.Model):
     url = models.URLField()
     fecha_subida = models.DateTimeField(auto_now_add=True)
     fecha_modificacion = models.DateTimeField(auto_now=True)
-    empleado_id = models.ForeignKey('empleados.Empleado', on_delete=models.CASCADE)
+    empleado_id = models.ForeignKey('empleado.Empleado', on_delete=models.CASCADE)
     
     
