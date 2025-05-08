@@ -5,6 +5,7 @@ from .serializer import EmpleadoSerializers
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated
+from django.utils.crypto import get_random_string
 
 # Create your views here.
 
@@ -18,7 +19,7 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         apellidos = serializer.validated_data['apellidos']
         username = f'{ci}.{self.iniciales(apellidos)}'
         email = f'{username}@rrhh.com'
-        password = User.objects.make_random_password()
+        password = get_random_string(12)
         
         user = User.objects.create_user(
             username=username,
