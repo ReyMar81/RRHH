@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated
 
+# Create your views here.
+
 class EmpleadoViewSets(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Empleado.objects.all()
@@ -16,11 +18,8 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         apellidos = serializer.validated_data['apellidos']
         username = f'{ci}.{self.iniciales(apellidos)}'
         email = f'{username}@rrhh.com'
-        
-        # Generar contraseña aleatoria
         password = User.objects.make_random_password()
-
-        # Crear usuario
+        
         user = User.objects.create_user(
             username=username,
             email=email,
