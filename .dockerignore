@@ -7,7 +7,9 @@ frontend/node_modules/
 
 # Ignorar archivos de configuración local
 *.env
-*.md
 
 # Ignorar directorios o archivos no necesarios
 .DS_Store
+
+# Ignorar directorio de distribución
+dist/

@@ -51,13 +51,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'rrhh.urls'
@@ -88,10 +87,10 @@ WSGI_APPLICATION = 'rrhh.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'rrhh_db'),  # Usar las variables de entorno
+        'NAME': os.getenv('POSTGRES_DB', 'rrhh_db'),
         'USER': os.getenv('POSTGRES_USER', 'rrhh_user'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'rrhh_pass'),
-        'HOST': os.getenv('POSTGRES_HOST', 'db'),  # Este es el nombre del servicio del contenedor de la base de datos
+        'HOST': os.getenv('POSTGRES_HOST', 'db'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
@@ -149,3 +148,5 @@ REST_FRAMEWORK = {
 
 # Modificaciones propias
 CORS_ALLOW_ALL_ORIGINS = True  # (o solo los necesarios en producción)
+
+AUTH_USER_MODEL = 'auth.User'  # Esto debería ser el valor predeterminado
