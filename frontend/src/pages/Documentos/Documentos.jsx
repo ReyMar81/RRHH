@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import supabase from "../../services/supabaseClient"; // Importar Supabase
-import axios from "axios";
-import { Apiurl } from "../../services/Apirest";
+import apiClient from "../../services/Apirest"; // Usar apiClient configurado
 import { Table, Button, Modal, Form } from "react-bootstrap";
 
 const Documentos = () => {
@@ -19,20 +18,10 @@ const Documentos = () => {
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState("");
 
-    // Obtener el token JWT desde el almacenamiento local
-    const getAuthHeaders = () => {
-        const token = localStorage.getItem("access_token");
-        return {
-            Authorization: `Bearer ${token}`,
-        };
-    };
-
     // Obtener documentos
     const fetchDocumentos = async () => {
         try {
-            const response = await axios.get(`${Apiurl}documentos/`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await apiClient.get("documentos/");
             setDocumentos(response.data);
         } catch (error) {
             console.error("Error al obtener documentos:", error);
@@ -42,9 +31,7 @@ const Documentos = () => {
     // Obtener empleados
     const fetchEmpleados = async () => {
         try {
-            const response = await axios.get(`${Apiurl}empleados/`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await apiClient.get("empleados/");
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
@@ -91,18 +78,16 @@ const Documentos = () => {
 
             // Crear o actualizar documento en el backend
             if (isEditing) {
-                await axios.put(
-                    `${Apiurl}documentos/${editId}/`,
-                    { ...formData, url: downloadURL },
-                    { headers: getAuthHeaders() }
-                );
+                await apiClient.put(`documentos/${editId}/`, {
+                    ...formData,
+                    url: downloadURL,
+                });
                 setMessage("Documento actualizado con éxito.");
             } else {
-                await axios.post(
-                    `${Apiurl}documentos/`,
-                    { ...formData, url: downloadURL },
-                    { headers: getAuthHeaders() }
-                );
+                await apiClient.post("documentos/", {
+                    ...formData,
+                    url: downloadURL,
+                });
                 setMessage("Documento subido con éxito.");
             }
 
@@ -120,9 +105,7 @@ const Documentos = () => {
     // Eliminar documento
     const deleteDocumento = async (id) => {
         try {
-            await axios.delete(`${Apiurl}documentos/${id}/`, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.delete(`documentos/${id}/`);
             fetchDocumentos();
             setMessage("Documento eliminado con éxito.");
         } catch (error) {

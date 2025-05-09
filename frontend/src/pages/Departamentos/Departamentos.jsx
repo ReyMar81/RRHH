@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Apiurl } from "../../services/Apirest";
-import axios from "axios";
+import apiClient from "../../services/Apirest";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Departamentos = () => {
@@ -13,20 +12,10 @@ const Departamentos = () => {
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    // Obtener el token JWT desde el almacenamiento local
-    const getAuthHeaders = () => {
-        const token = localStorage.getItem("access_token");
-        return {
-            Authorization: `Bearer ${token}`,
-        };
-    };
-
     // Obtener departamentos
     const fetchDepartamentos = async () => {
         try {
-            const response = await axios.get(`${Apiurl}departamentos/`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await apiClient.get("departamentos/");
             setDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener departamentos:", error);
@@ -36,9 +25,7 @@ const Departamentos = () => {
     // Crear departamento
     const createDepartamento = async () => {
         try {
-            await axios.post(`${Apiurl}departamentos/`, formData, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.post("departamentos/", formData);
             fetchDepartamentos();
             resetForm();
             setShowModal(false);
@@ -50,9 +37,7 @@ const Departamentos = () => {
     // Editar departamento
     const updateDepartamento = async () => {
         try {
-            await axios.put(`${Apiurl}departamentos/${editId}/`, formData, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.put(`departamentos/${editId}/`, formData);
             fetchDepartamentos();
             resetForm();
             setIsEditing(false);
@@ -66,9 +51,7 @@ const Departamentos = () => {
     // Eliminar departamento
     const deleteDepartamento = async (id) => {
         try {
-            await axios.delete(`${Apiurl}departamentos/${id}/`, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.delete(`departamentos/${id}/`);
             fetchDepartamentos();
         } catch (error) {
             console.error("Error al eliminar departamento:", error);

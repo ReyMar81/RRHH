@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Apiurl } from "../../services/Apirest";
-import axios from "axios";
+import apiClient from "../../services/Apirest";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Empleados = () => {
@@ -35,20 +34,10 @@ const Empleados = () => {
         { value: "V", label: "Viudo/a" },
     ];
 
-    // Obtener el token JWT desde el almacenamiento local
-    const getAuthHeaders = () => {
-        const token = localStorage.getItem("access_token");
-        return {
-            Authorization: `Bearer ${token}`,
-        };
-    };
-
     // Obtener empleados
     const fetchEmpleados = async () => {
         try {
-            const response = await axios.get(`${Apiurl}empleados/`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await apiClient.get("empleados/");
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
@@ -58,9 +47,7 @@ const Empleados = () => {
     // Obtener departamentos
     const fetchDepartamentos = async () => {
         try {
-            const response = await axios.get(`${Apiurl}departamentos/`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await apiClient.get("departamentos/");
             setDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener departamentos:", error);
@@ -70,9 +57,7 @@ const Empleados = () => {
     // Crear empleado
     const createEmpleado = async () => {
         try {
-            await axios.post(`${Apiurl}empleados/`, formData, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.post("empleados/", formData);
             fetchEmpleados();
             resetForm();
             setShowModal(false);
@@ -84,9 +69,7 @@ const Empleados = () => {
     // Editar empleado
     const updateEmpleado = async () => {
         try {
-            await axios.put(`${Apiurl}empleados/${editId}/`, formData, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.put(`empleados/${editId}/`, formData);
             fetchEmpleados();
             resetForm();
             setIsEditing(false);
@@ -100,9 +83,7 @@ const Empleados = () => {
     // Eliminar empleado
     const deleteEmpleado = async (id) => {
         try {
-            await axios.delete(`${Apiurl}empleados/${id}/`, {
-                headers: getAuthHeaders(),
-            });
+            await apiClient.delete(`empleados/${id}/`);
             fetchEmpleados();
         } catch (error) {
             console.error("Error al eliminar empleado:", error);
