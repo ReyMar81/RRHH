@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from .models import Empleado
@@ -34,3 +35,22 @@ def crear_empleado_con_usuario(data):
 
 def iniciales(apellidos: str):
     return ''.join(a[0].upper() for a in apellidos.split())
+
+# Cambiar la contraseña de un empleado validando la contraseña actual
+def cambiar_password_con_validacion(empleado_id, actual_password, nueva_password):
+    try:
+        empleado = Empleado.objects.get(id=empleado_id)
+        usuario = empleado.user_id
+
+        # Verificar la contraseña actual
+        usuario_autenticado = authenticate(username=usuario.username, password=actual_password)
+        if not usuario_autenticado:
+            return False, "Contraseña actual incorrecta"
+
+        # Establecer nueva contraseña
+        usuario.set_password(nueva_password)
+        usuario.save()
+        return True, "Contraseña actualizada correctamente"
+
+    except Empleado.DoesNotExist:
+        return False, "Empleado no encontrado"
