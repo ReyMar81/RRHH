@@ -7,5 +7,9 @@ router.register(r'empleados', EmpleadoViewSets)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('empleados/<int:empleado_id>/cambiar_password/', CambiarPasswordEmpleadoView.as_view(), name='cambiar_password_empleado'),
+    path(
+        'empleados/<int:empleado_id>/cambiar_password/',
+        CambiarPasswordEmpleadoView.as_view(),
+        name='cambiar_password_empleado'
+    ),
 ]
