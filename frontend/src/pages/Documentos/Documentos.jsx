@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../services/firebaseConfig";
+import supabase from "../../services/supabaseClient"; // Importar Supabase
 import axios from "axios";
 import { Apiurl } from "../../services/Apirest";
 import { Table, Button, Modal, Form } from "react-bootstrap";
 
 const Documentos = () => {
     const [documentos, setDocumentos] = useState([]);
+    const [empleados, setEmpleados] = useState([]); // Estado para almacenar los empleados
     const [file, setFile] = useState(null);
     const [formData, setFormData] = useState({
         nombre: "",
@@ -39,6 +39,18 @@ const Documentos = () => {
         }
     };
 
+    // Obtener empleados
+    const fetchEmpleados = async () => {
+        try {
+            const response = await axios.get(`${Apiurl}empleados/`, {
+                headers: getAuthHeaders(),
+            });
+            setEmpleados(response.data);
+        } catch (error) {
+            console.error("Error al obtener empleados:", error);
+        }
+    };
+
     // Manejar cambios en el formulario
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,7 +61,7 @@ const Documentos = () => {
         setFile(e.target.files[0]);
     };
 
-    // Subir documento
+    // Subir documento a Supabase
     const handleUpload = async () => {
         if (!file) {
             setMessage("Por favor, selecciona un archivo.");
@@ -60,12 +72,22 @@ const Documentos = () => {
         setMessage("");
 
         try {
-            // Subir archivo a Firebase Storage
-            const storageRef = ref(storage, `documentos/${file.name}`);
-            await uploadBytes(storageRef, file);
+            // Subir archivo a Supabase Storage
+            const filePath = `documentos/${file.name}`;
+            const { data, error } = await supabase.storage
+                .from("documentos") // Nombre del bucket
+                .upload(filePath, file);
 
-            // Obtener la URL de descarga
-            const downloadURL = await getDownloadURL(storageRef);
+            if (error) {
+                throw error;
+            }
+
+            // Obtener la URL pública del archivo
+            const { data: publicUrlData } = supabase.storage
+                .from("documentos")
+                .getPublicUrl(filePath);
+
+            const downloadURL = publicUrlData.publicUrl;
 
             // Crear o actualizar documento en el backend
             if (isEditing) {
@@ -121,9 +143,10 @@ const Documentos = () => {
         setEditId(null);
     };
 
-    // Cargar documentos al montar el componente
+    // Cargar documentos y empleados al montar el componente
     useEffect(() => {
         fetchDocumentos();
+        fetchEmpleados(); // Cargar empleados
     }, []);
 
     return (
@@ -155,7 +178,12 @@ const Documentos = () => {
                                 </a>
                             </td>
                             <td>{doc.tipo_documento}</td>
-                            <td>{doc.empleado_id}</td>
+                            <td>
+                                {
+                                    empleados.find((emp) => emp.id === doc.empleado_id)?.nombre ||
+                                    "Desconocido"
+                                }
+                            </td>
                             <td>{new Date(doc.fecha_subida).toLocaleString()}</td>
                             <td>
                                 <div className="d-flex gap-2">
@@ -227,15 +255,20 @@ const Documentos = () => {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>ID del Empleado</Form.Label>
-                            <Form.Control
-                                type="number"
+                            <Form.Label>Empleado</Form.Label>
+                            <Form.Select
                                 name="empleado_id"
-                                placeholder="ID del empleado"
                                 value={formData.empleado_id}
                                 onChange={handleChange}
                                 required
-                            />
+                            >
+                                <option value="">Seleccione un empleado</option>
+                                {empleados.map((empleado) => (
+                                    <option key={empleado.id} value={empleado.id}>
+                                        {empleado.nombre} {empleado.apellidos}
+                                    </option>
+                                ))}
+                            </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Archivo</Form.Label>
