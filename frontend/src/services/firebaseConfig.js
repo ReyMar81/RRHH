@@ -4,12 +4,12 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBMXU4PvG-byLyuzkJ-qBTbSLRRbgph36Q",
-    authDomain: "dmsclinica-e3104.firebaseapp.com",
-    projectId: "dmsclinica-e3104",
-    storageBucket: "dmsclinica-e3104.appspot.com",
-    messagingSenderId: "732299773786",
-    appId: "1:732299773786:web:83128c1d8b1f4c5da91563"
+    apiKey: "AIzaSyCiG4zJFxl3sYGX9in4vidMK4mSG54xui8",
+    authDomain: "rrhh-2bbb0.firebaseapp.com",
+    projectId: "rrhh-2bbb0",
+    storageBucket: "rrhh-2bbb0.firebasestorage.app",
+    messagingSenderId: "645221967987",
+    appId: "1:645221967987:web:8dd0831d4c41c0ecb5e206"
 };
 
 // Initialize Firebase

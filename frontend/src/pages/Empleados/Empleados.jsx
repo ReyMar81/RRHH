@@ -148,7 +148,7 @@ const Empleados = () => {
     }, []);
 
     return (
-        <div className="mt-4 rounded shadow-sm p-4 bg-white">
+        <div className="container mt-4">
             <h1 className="mb-4 text-primary">Gestión de Empleados</h1>
             <div className="d-flex justify-content-end mb-3">
                 <Button variant="primary" onClick={() => setShowModal(true)}>
@@ -234,22 +234,61 @@ const Empleados = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
-                        {Object.keys(formData).map((key) => (
-                            <Form.Group className="mb-3" key={key}>
-                                <Form.Label>
-                                    {key
-                                        .replace(/_/g, " ") // Reemplaza guiones bajos con espacios
-                                        .split(" ") // Divide las palabras
-                                        .map(
-                                            (word) =>
-                                                word.charAt(0).toUpperCase() + word.slice(1) // Convierte la primera letra en mayúscula
-                                        )
-                                        .join(" ")} {/* Une las palabras nuevamente */}
-                                </Form.Label>
-                                {key === "genero" ? (
+                        <div className="row">
+                            {/* Primera columna */}
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Nombre</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="nombre"
+                                        placeholder="Nombre"
+                                        value={formData.nombre}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Apellidos</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="apellidos"
+                                        placeholder="Apellidos"
+                                        value={formData.apellidos}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>CI</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="ci"
+                                        placeholder="CI"
+                                        value={formData.ci}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Fecha de Nacimiento</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        name="fecha_nacimiento"
+                                        value={formData.fecha_nacimiento}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                            </div>
+
+                            {/* Segunda columna */}
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Género</Form.Label>
                                     <Form.Select
-                                        name={key}
-                                        value={formData[key]}
+                                        name="genero"
+                                        value={formData.genero}
                                         onChange={handleChange}
                                         required
                                     >
@@ -260,10 +299,23 @@ const Empleados = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-                                ) : key === "estado_civil" ? (
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Dirección</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="direccion"
+                                        placeholder="Dirección"
+                                        value={formData.direccion}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Estado Civil</Form.Label>
                                     <Form.Select
-                                        name={key}
-                                        value={formData[key]}
+                                        name="estado_civil"
+                                        value={formData.estado_civil}
                                         onChange={handleChange}
                                         required
                                     >
@@ -274,10 +326,59 @@ const Empleados = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-                                ) : key === "departamento_id" ? (
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Teléfono</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="telefono"
+                                        placeholder="Teléfono"
+                                        value={formData.telefono}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                            </div>
+                        </div>
+
+                        {/* Tercera fila */}
+                        <div className="row">
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Cargo</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="cargo"
+                                        placeholder="Cargo"
+                                        value={formData.cargo}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Correo Personal</Form.Label>
+                                    <Form.Control
+                                        type="email"
+                                        name="correo_personal"
+                                        placeholder="Correo Personal"
+                                        value={formData.correo_personal}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                            </div>
+                        </div>
+
+                        {/* Última fila */}
+                        <div className="row">
+                            <div className="col-md-12">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Departamento</Form.Label>
                                     <Form.Select
-                                        name={key}
-                                        value={formData[key]}
+                                        name="departamento_id"
+                                        value={formData.departamento_id}
                                         onChange={handleChange}
                                     >
                                         <option value="">Seleccione un departamento</option>
@@ -287,18 +388,10 @@ const Empleados = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-                                ) : (
-                                    <Form.Control
-                                        type={key === "fecha_nacimiento" ? "date" : "text"}
-                                        name={key}
-                                        placeholder={key}
-                                        value={formData[key]}
-                                        onChange={handleChange}
-                                        required={key !== "departamento_id"}
-                                    />
-                                )}
-                            </Form.Group>
-                        ))}
+                                </Form.Group>
+                            </div>
+                        </div>
+
                         <div className="d-flex justify-content-end">
                             <Button variant="secondary" onClick={() => setShowModal(false)} className="me-2">
                                 Cancelar
