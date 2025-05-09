@@ -34,3 +34,13 @@ def crear_empleado_con_usuario(data):
 
 def iniciales(apellidos: str):
     return ''.join(a[0].upper() for a in apellidos.split())
+
+def cambiar_password_empleado(empleado_id, nueva_password):
+    try:
+        empleado = Empleado.objects.get(id=empleado_id)
+        usuario = empleado.user_id
+        usuario.set_password(nueva_password)
+        usuario.save()
+        return True, "Contraseña actualizada correctamente"
+    except Empleado.DoesNotExist:
+        return False, "Empleado no encontrado"

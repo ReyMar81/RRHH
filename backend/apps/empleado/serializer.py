@@ -6,3 +6,6 @@ class EmpleadoSerializers(serializers.ModelSerializer):
         model = Empleado
         fields = '__all__'
         read_only_fields = ['user_id']
+
+class CambiarPasswordEmpleadoSerializer(serializers.Serializer):
+    nueva_password = serializers.CharField(write_only=True, min_length=6)
