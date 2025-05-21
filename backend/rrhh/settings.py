@@ -46,6 +46,11 @@ INSTALLED_APPS = [
     'apps.empleado',
     'apps.documento',
     'apps.departamento',
+    'apps.cargo',
+    'apps.cargo_departamento',
+    'apps.asistencia',
+    'apps.horas_extras',
+    'apps.contrato',
 ]
 
 MIDDLEWARE = [

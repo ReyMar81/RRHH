@@ -64,6 +64,3 @@ class Empleado(models.Model):
     correo_personal = models.EmailField(max_length=254, null=True, blank=True)
     user_id = models.OneToOneField(User, on_delete=models.CASCADE, 
                                    related_name='empleado', blank=True)
-    departamento_id =models.ForeignKey('departamento.Departamento',
-                                        on_delete=models.SET_NULL, null=True,
-                                        blank=True)
