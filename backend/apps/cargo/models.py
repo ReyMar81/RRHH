@@ -15,7 +15,7 @@ class Cargo(models.Model):
     nombre = models.CharField(max_length=50)
     tipo_pago = models.CharField(max_length=20, choices=TIPO_PAGO_CHOICES)
     salario = models.DecimalField(max_digits=10, decimal_places=2)
-    horas_por_dia = models.DurationField()
+    receso_diario = models.DecimalField(max_digits=4, decimal_places=2, default=0)
     horario_inicio = models.TimeField()
     horario_fin = models.TimeField()
     cargo_padre = ForeignKey(

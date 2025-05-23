@@ -12,3 +12,9 @@ class DepartamentoSerializers(serializers.ModelSerializer):
     class Meta:
         model = Departamento
         fields = '__all__'
+
+class EmpleadoEstadoAsistenciaSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    nombre_completo = serializers.CharField()
+    cargo = serializers.CharField()
+    estado = serializers.CharField()
