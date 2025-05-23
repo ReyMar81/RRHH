@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../services/Apirest";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 
@@ -11,6 +12,8 @@ const Departamentos = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
+
+    const navigate = useNavigate();
 
     // Obtener departamentos
     const fetchDepartamentos = async () => {
@@ -72,7 +75,16 @@ const Departamentos = () => {
     return (
         <div className="container mt-4">
             <h1 className="mb-4 text-primary">Gestión de Departamentos</h1>
-            <div className="d-flex justify-content-end mb-3">
+            <div className="d-flex justify-content-between mb-3">
+                <div>
+                    <Button
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() => navigate("/dashboard/cargos")}
+                    >
+                        Cargos
+                    </Button>
+                </div>
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Departamento
                 </Button>

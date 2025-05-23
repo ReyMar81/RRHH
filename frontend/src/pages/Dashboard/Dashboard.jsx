@@ -49,8 +49,20 @@ const Dashboard = () => {
                     </li>
                     <li className="nav-item">
                         <Link to="documentos" className="nav-link text-white p-3 d-flex align-items-center">
-                            <i className="bi bi-person-badge"></i>
+                            <i className="bi bi-folder"></i>
                             <span className="ms-2">Documentos</span>
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link to="asistencia" className="nav-link text-white p-3 d-flex align-items-center">
+                            <i className="bi bi-calendar-check"></i>
+                            <span className="ms-2">Asistencia</span>
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link to="contratos" className="nav-link text-white p-3 d-flex align-items-center">
+                            <i className="bi bi-file-earmark-text"></i>
+                            <span className="ms-2">Contratos</span>
                         </Link>
                     </li>
                 </ul>
