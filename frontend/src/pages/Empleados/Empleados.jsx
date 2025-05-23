@@ -13,7 +13,6 @@ const Empleados = () => {
         direccion: "",
         estado_civil: "",
         telefono: "",
-        cargo: "",
         correo_personal: "",
     });
     const [isEditing, setIsEditing] = useState(false);
@@ -104,7 +103,6 @@ const Empleados = () => {
             direccion: "",
             estado_civil: "",
             telefono: "",
-            cargo: "",
             correo_personal: "",
         });
     };
@@ -128,7 +126,6 @@ const Empleados = () => {
                         <th>Nombre</th>
                         <th>Apellidos</th>
                         <th>Teléfono</th>
-                        <th>Cargo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -138,7 +135,6 @@ const Empleados = () => {
                             <td>{empleado.nombre}</td>
                             <td>{empleado.apellidos}</td>
                             <td>{empleado.telefono}</td>
-                            <td>{empleado.cargo}</td>
                             <td>
                                 <Button
                                     variant="link"
@@ -146,7 +142,9 @@ const Empleados = () => {
                                     onClick={() => {
                                         setIsEditing(true);
                                         setEditId(empleado.id);
-                                        setFormData({ ...empleado });
+                                        // Elimina cargo si viene del backend
+                                        const { cargo, ...rest } = empleado;
+                                        setFormData({ ...rest });
                                         setShowModal(true);
                                     }}
                                 >
@@ -274,20 +272,7 @@ const Empleados = () => {
                             </div>
                         </div>
                         <div className="row">
-                            <div className="col-md-6">
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Cargo</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="cargo"
-                                        placeholder="Cargo"
-                                        value={formData.cargo}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </Form.Group>
-                            </div>
-                            <div className="col-md-6">
+                            <div className="col-md-12">
                                 <Form.Group className="mb-3">
                                     <Form.Label>Correo Personal</Form.Label>
                                     <Form.Control
