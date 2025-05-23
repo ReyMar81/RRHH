@@ -4,11 +4,9 @@ import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Departamentos = () => {
     const [departamentos, setDepartamentos] = useState([]);
-    const [cargos, setCargos] = useState([]);
     const [formData, setFormData] = useState({
         nombre: "",
         descripcion: "",
-        cargos: [],
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -24,22 +22,12 @@ const Departamentos = () => {
         }
     };
 
-    // Obtener cargos
-    const fetchCargos = async () => {
-        try {
-            const response = await apiClient.get("cargos/");
-            setCargos(response.data);
-        } catch (error) {
-            console.error("Error al obtener cargos:", error);
-        }
-    };
-
     // Crear o editar departamento
     const handleSubmit = async (e) => {
         e.preventDefault();
         const payload = {
-            ...formData,
-            cargos: formData.cargos || [], // Asegúrate de enviar los IDs de los cargos
+            nombre: formData.nombre,
+            descripcion: formData.descripcion,
         };
 
         if (isEditing) {
@@ -73,14 +61,12 @@ const Departamentos = () => {
         setFormData({
             nombre: "",
             descripcion: "",
-            cargos: [],
         });
     };
 
-    // Cargar departamentos y cargos al montar el componente
+    // Cargar departamentos al montar el componente
     useEffect(() => {
         fetchDepartamentos();
-        fetchCargos(); // Cargar cargos al montar el componente
     }, []);
 
     return (
@@ -97,7 +83,6 @@ const Departamentos = () => {
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
-                        <th>Cargos</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -108,12 +93,6 @@ const Departamentos = () => {
                             <td>{departamento.nombre}</td>
                             <td>{departamento.descripcion}</td>
                             <td>
-                                {departamento.departamento_cargos?.map((cargo) => (
-                                    <span key={cargo.id}>{cargo.nombre}</span>
-                                )) || "Sin cargos"}
-                            </td>
-                            <td>
-                                {/* Botón de los 3 puntos */}
                                 <Button
                                     variant="link"
                                     className="p-0"
@@ -123,7 +102,6 @@ const Departamentos = () => {
                                         setFormData({
                                             nombre: departamento.nombre,
                                             descripcion: departamento.descripcion,
-                                            cargos: departamento.departamento_cargos?.map((cargo) => cargo.id) || [],
                                         });
                                         setShowModal(true);
                                     }}
@@ -172,26 +150,6 @@ const Departamentos = () => {
                                 onChange={handleChange}
                                 required
                             />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Cargos</Form.Label>
-                            <Form.Select
-                                name="cargos"
-                                multiple
-                                value={formData.cargos || []}
-                                onChange={(e) => {
-                                    const selectedOptions = Array.from(e.target.selectedOptions).map(
-                                        (option) => option.value
-                                    );
-                                    setFormData({ ...formData, cargos: selectedOptions });
-                                }}
-                            >
-                                {cargos.map((cargo) => (
-                                    <option key={cargo.id} value={cargo.id}>
-                                        {cargo.nombre}
-                                    </option>
-                                ))}
-                            </Form.Select>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
