@@ -1,3 +1,4 @@
+from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from .models import Empleado
 from .serializer import CambiarPasswordConValidacionSerializer, EmpleadoSerializers
@@ -13,7 +14,14 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializers
-
+    @action(detail=False, methods=['get'], url_path='actual')
+    def actual(self, request):
+        empleado = Empleado.objects.filter(user_id=request.user).first()
+        if not empleado:
+            return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+    
+        serializer = self.get_serializer(empleado)
+        return Response(serializer.data)
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -35,9 +43,9 @@ class CambiarPasswordEmpleadoView(APIView):
         description="Permite al empleado cambiar su contraseña validando la actual"
     )
     def put(self, request, empleado_id):
-        serializer = CambiarPasswordConValidacionSerializer(data=request.data)
+        serializer = CambiarPasswordConValidacionSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            actual = serializer.validated_data['actual_password']
+            actual = serializer.validated_data.get('actual_password')
             nueva = serializer.validated_data['nueva_password']
 
             exito, mensaje = cambiar_password_con_validacion(empleado_id, actual, nueva)

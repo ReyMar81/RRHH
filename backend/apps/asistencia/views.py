@@ -88,3 +88,28 @@ class MisAsistenciasAPIView(APIView):
             return Response(serializer.data)
         except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+class EstadoAsistenciaAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            empleado = Empleado.objects.get(user_id=request.user.id)
+            hoy = datetime.today().date()
+
+            asistencia = Asistencia.objects.filter(empleado=empleado, fecha=hoy).first()
+
+            if asistencia:
+                ya_marco_salida = asistencia.hora_salida is not None
+                return Response({
+                    'yaMarcoSalida': ya_marco_salida,
+                    'mensaje': 'Ya finalizó su jornada hoy' if ya_marco_salida else 'Puede registrar su salida'
+                })
+
+            return Response({
+                'yaMarcoSalida': False,
+                'mensaje': 'Puede registrar su entrada'
+            })
+
+        except Empleado.DoesNotExist:
+            return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)

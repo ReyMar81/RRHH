@@ -37,22 +37,28 @@ def crear_empleado_con_usuario(data):
 def iniciales(apellidos: str):
     return ''.join(a[0].upper() for a in apellidos.split())
 
-# Cambiar la contraseña de un empleado validando la contraseña actual
+# Cambiar la contraseña de un empleado
 def cambiar_password_con_validacion(empleado_id, actual_password, nueva_password):
     try:
         empleado = Empleado.objects.get(id=empleado_id)
         usuario = empleado.user_id
 
-        # Verificar la contraseña actual
-        usuario_autenticado = authenticate(username=usuario.username, password=actual_password)
-        if not usuario_autenticado:
-            return False, "Contraseña actual incorrecta"
+        # Verificar si es su primer ingreso (cambio forzado)
+        if usuario.cambio_password_pendiente:
+            # Saltamos validación de contraseña actual
+            usuario.set_password(nueva_password)
+            usuario.cambio_password_pendiente = False
+            usuario.save()
+            return True, "Contraseña establecida en el primer ingreso"
+        else:
+            # Verificar la contraseña actual normalmente
+            usuario_autenticado = authenticate(username=usuario.username, password=actual_password)
+            if not usuario_autenticado:
+                return False, "Contraseña actual incorrecta"
 
-        # Establecer nueva contraseña
-        usuario.set_password(nueva_password)
-        usuario.cambio_password_pendiente = False
-        usuario.save()
-        return True, "Contraseña actualizada correctamente"
+            usuario.set_password(nueva_password)
+            usuario.save()
+            return True, "Contraseña actualizada correctamente"
 
     except Empleado.DoesNotExist:
         return False, "Empleado no encontrado"
