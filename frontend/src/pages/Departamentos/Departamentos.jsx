@@ -4,9 +4,11 @@ import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Departamentos = () => {
     const [departamentos, setDepartamentos] = useState([]);
+    const [cargos, setCargos] = useState([]);
     const [formData, setFormData] = useState({
         nombre: "",
         descripcion: "",
+        cargos: [],
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -22,30 +24,33 @@ const Departamentos = () => {
         }
     };
 
-    // Crear departamento
-    const createDepartamento = async () => {
+    // Obtener cargos
+    const fetchCargos = async () => {
         try {
-            await apiClient.post("departamentos/", formData);
-            fetchDepartamentos();
-            resetForm();
-            setShowModal(false);
+            const response = await apiClient.get("cargos/");
+            setCargos(response.data);
         } catch (error) {
-            console.error("Error al crear departamento:", error);
+            console.error("Error al obtener cargos:", error);
         }
     };
 
-    // Editar departamento
-    const updateDepartamento = async () => {
-        try {
-            await apiClient.put(`departamentos/${editId}/`, formData);
-            fetchDepartamentos();
-            resetForm();
-            setIsEditing(false);
-            setEditId(null);
-            setShowModal(false);
-        } catch (error) {
-            console.error("Error al actualizar departamento:", error);
+    // Crear o editar departamento
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+            ...formData,
+            cargos: formData.cargos || [], // Asegúrate de enviar los IDs de los cargos
+        };
+
+        if (isEditing) {
+            await apiClient.put(`departamentos/${editId}/`, payload);
+        } else {
+            await apiClient.post("departamentos/", payload);
         }
+
+        fetchDepartamentos();
+        resetForm();
+        setShowModal(false);
     };
 
     // Eliminar departamento
@@ -55,16 +60,6 @@ const Departamentos = () => {
             fetchDepartamentos();
         } catch (error) {
             console.error("Error al eliminar departamento:", error);
-        }
-    };
-
-    // Manejar el envío del formulario
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (isEditing) {
-            updateDepartamento();
-        } else {
-            createDepartamento();
         }
     };
 
@@ -78,12 +73,14 @@ const Departamentos = () => {
         setFormData({
             nombre: "",
             descripcion: "",
+            cargos: [],
         });
     };
 
-    // Cargar departamentos al montar el componente
+    // Cargar departamentos y cargos al montar el componente
     useEffect(() => {
         fetchDepartamentos();
+        fetchCargos(); // Cargar cargos al montar el componente
     }, []);
 
     return (
@@ -100,6 +97,7 @@ const Departamentos = () => {
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
+                        <th>Cargos</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -110,30 +108,28 @@ const Departamentos = () => {
                             <td>{departamento.nombre}</td>
                             <td>{departamento.descripcion}</td>
                             <td>
-                                <div className="d-flex gap-2">
-                                    <Button
-                                        variant="warning"
-                                        size="sm"
-                                        onClick={() => {
-                                            setIsEditing(true);
-                                            setEditId(departamento.id);
-                                            setFormData({
-                                                nombre: departamento.nombre,
-                                                descripcion: departamento.descripcion,
-                                            });
-                                            setShowModal(true);
-                                        }}
-                                    >
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => deleteDepartamento(departamento.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
+                                {departamento.departamento_cargos?.map((cargo) => (
+                                    <span key={cargo.id}>{cargo.nombre}</span>
+                                )) || "Sin cargos"}
+                            </td>
+                            <td>
+                                {/* Botón de los 3 puntos */}
+                                <Button
+                                    variant="link"
+                                    className="p-0"
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setEditId(departamento.id);
+                                        setFormData({
+                                            nombre: departamento.nombre,
+                                            descripcion: departamento.descripcion,
+                                            cargos: departamento.departamento_cargos?.map((cargo) => cargo.id) || [],
+                                        });
+                                        setShowModal(true);
+                                    }}
+                                >
+                                    <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
+                                </Button>
                             </td>
                         </tr>
                     ))}
@@ -143,7 +139,10 @@ const Departamentos = () => {
             {/* Modal para crear/editar departamentos */}
             <Modal
                 show={showModal}
-                onHide={() => setShowModal(false)}
+                onHide={() => {
+                    setShowModal(false);
+                    resetForm();
+                }}
                 centered
                 backdrop="static"
             >
@@ -174,16 +173,65 @@ const Departamentos = () => {
                                 required
                             />
                         </Form.Group>
-                        <div className="d-flex justify-content-end">
-                            <Button variant="secondary" onClick={() => setShowModal(false)} className="me-2">
-                                Cancelar
-                            </Button>
-                            <Button variant="primary" type="submit">
-                                {isEditing ? "Actualizar" : "Crear"}
-                            </Button>
-                        </div>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Cargos</Form.Label>
+                            <Form.Select
+                                name="cargos"
+                                multiple
+                                value={formData.cargos || []}
+                                onChange={(e) => {
+                                    const selectedOptions = Array.from(e.target.selectedOptions).map(
+                                        (option) => option.value
+                                    );
+                                    setFormData({ ...formData, cargos: selectedOptions });
+                                }}
+                            >
+                                {cargos.map((cargo) => (
+                                    <option key={cargo.id} value={cargo.id}>
+                                        {cargo.nombre}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
                     </Form>
                 </Modal.Body>
+                <Modal.Footer>
+                    {/* Botón de eliminar */}
+                    {isEditing && (
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                if (
+                                    window.confirm(
+                                        `¿Estás seguro de que deseas eliminar el departamento "${formData.nombre}"?`
+                                    )
+                                ) {
+                                    deleteDepartamento(editId);
+                                    setShowModal(false);
+                                }
+                            }}
+                        >
+                            Eliminar
+                        </Button>
+                    )}
+
+                    {/* Botones de cancelar y guardar */}
+                    <div>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setShowModal(false);
+                                resetForm();
+                            }}
+                            className="me-2"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" type="submit">
+                            {isEditing ? "Actualizar" : "Crear"}
+                        </Button>
+                    </div>
+                </Modal.Footer>
             </Modal>
         </div>
     );

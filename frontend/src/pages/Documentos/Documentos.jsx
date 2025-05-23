@@ -169,31 +169,23 @@ const Documentos = () => {
                             </td>
                             <td>{new Date(doc.fecha_subida).toLocaleString()}</td>
                             <td>
-                                <div className="d-flex gap-2">
-                                    <Button
-                                        variant="warning"
-                                        size="sm"
-                                        onClick={() => {
-                                            setIsEditing(true);
-                                            setEditId(doc.id);
-                                            setFormData({
-                                                nombre: doc.nombre,
-                                                tipo_documento: doc.tipo_documento,
-                                                empleado_id: doc.empleado_id,
-                                            });
-                                            setShowModal(true);
-                                        }}
-                                    >
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => deleteDocumento(doc.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
+                                {/* Botón de los 3 puntos */}
+                                <Button
+                                    variant="link"
+                                    className="p-0"
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setEditId(doc.id);
+                                        setFormData({
+                                            nombre: doc.nombre,
+                                            tipo_documento: doc.tipo_documento,
+                                            empleado_id: doc.empleado_id,
+                                        });
+                                        setShowModal(true);
+                                    }}
+                                >
+                                    <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
+                                </Button>
                             </td>
                         </tr>
                     ))}
@@ -265,12 +257,41 @@ const Documentos = () => {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>
-                        Cancelar
-                    </Button>
-                    <Button variant="primary" onClick={handleUpload} disabled={uploading}>
-                        {uploading ? "Subiendo..." : isEditing ? "Actualizar" : "Subir"}
-                    </Button>
+                    {/* Botón de eliminar */}
+                    {isEditing && (
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                if (
+                                    window.confirm(
+                                        `¿Estás seguro de que deseas eliminar el documento "${formData.nombre}"?`
+                                    )
+                                ) {
+                                    deleteDocumento(editId);
+                                    setShowModal(false);
+                                }
+                            }}
+                        >
+                            Eliminar
+                        </Button>
+                    )}
+
+                    {/* Botones de cancelar y guardar */}
+                    <div>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setShowModal(false);
+                                resetForm();
+                            }}
+                            className="me-2"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" onClick={handleUpload} disabled={uploading}>
+                            {uploading ? "Subiendo..." : isEditing ? "Actualizar" : "Subir"}
+                        </Button>
+                    </div>
                 </Modal.Footer>
             </Modal>
             {message && <div className="mt-3 alert alert-info">{message}</div>}

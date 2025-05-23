@@ -4,7 +4,6 @@ import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Empleados = () => {
     const [empleados, setEmpleados] = useState([]);
-    const [departamentos, setDepartamentos] = useState([]); // Para almacenar los departamentos
     const [formData, setFormData] = useState({
         nombre: "",
         apellidos: "",
@@ -16,7 +15,6 @@ const Empleados = () => {
         telefono: "",
         cargo: "",
         correo_personal: "",
-        departamento_id: "",
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -41,16 +39,6 @@ const Empleados = () => {
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
-        }
-    };
-
-    // Obtener departamentos
-    const fetchDepartamentos = async () => {
-        try {
-            const response = await apiClient.get("departamentos/");
-            setDepartamentos(response.data);
-        } catch (error) {
-            console.error("Error al obtener departamentos:", error);
         }
     };
 
@@ -118,14 +106,12 @@ const Empleados = () => {
             telefono: "",
             cargo: "",
             correo_personal: "",
-            departamento_id: "",
         });
     };
 
-    // Cargar empleados y departamentos al montar el componente
+    // Cargar empleados al montar el componente
     useEffect(() => {
         fetchEmpleados();
-        fetchDepartamentos();
     }, []);
 
     return (
@@ -139,64 +125,33 @@ const Empleados = () => {
             <Table striped bordered hover responsive className="table-sm">
                 <thead className="table-primary">
                     <tr>
-                        <th>ID</th>
                         <th>Nombre</th>
                         <th>Apellidos</th>
-                        <th>CI</th>
-                        <th>Fecha Nacimiento</th>
-                        <th>Género</th>
-                        <th>Dirección</th>
-                        <th>Estado Civil</th>
                         <th>Teléfono</th>
                         <th>Cargo</th>
-                        <th>Correo Personal</th>
-                        <th>Departamento</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {empleados.map((empleado) => (
                         <tr key={empleado.id}>
-                            <td>{empleado.id}</td>
                             <td>{empleado.nombre}</td>
                             <td>{empleado.apellidos}</td>
-                            <td>{empleado.ci}</td>
-                            <td>{empleado.fecha_nacimiento}</td>
-                            <td>{empleado.genero}</td>
-                            <td>{empleado.direccion}</td>
-                            <td>{empleado.estado_civil}</td>
                             <td>{empleado.telefono}</td>
                             <td>{empleado.cargo}</td>
-                            <td>{empleado.correo_personal}</td>
                             <td>
-                                {
-                                    departamentos.find(
-                                        (dep) => dep.id === empleado.departamento_id
-                                    )?.nombre || "Sin Departamento"
-                                }
-                            </td>
-                            <td>
-                                <div className="d-flex gap-2">
-                                    <Button
-                                        variant="warning"
-                                        size="sm"
-                                        onClick={() => {
-                                            setIsEditing(true);
-                                            setEditId(empleado.id);
-                                            setFormData({ ...empleado });
-                                            setShowModal(true);
-                                        }}
-                                    >
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => deleteEmpleado(empleado.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
+                                <Button
+                                    variant="link"
+                                    className="p-0"
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setEditId(empleado.id);
+                                        setFormData({ ...empleado });
+                                        setShowModal(true);
+                                    }}
+                                >
+                                    <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
+                                </Button>
                             </td>
                         </tr>
                     ))}
@@ -216,7 +171,6 @@ const Empleados = () => {
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <div className="row">
-                            {/* Primera columna */}
                             <div className="col-md-6">
                                 <Form.Group className="mb-3">
                                     <Form.Label>Nombre</Form.Label>
@@ -262,8 +216,6 @@ const Empleados = () => {
                                     />
                                 </Form.Group>
                             </div>
-
-                            {/* Segunda columna */}
                             <div className="col-md-6">
                                 <Form.Group className="mb-3">
                                     <Form.Label>Género</Form.Label>
@@ -321,8 +273,6 @@ const Empleados = () => {
                                 </Form.Group>
                             </div>
                         </div>
-
-                        {/* Tercera fila */}
                         <div className="row">
                             <div className="col-md-6">
                                 <Form.Group className="mb-3">
@@ -351,35 +301,36 @@ const Empleados = () => {
                                 </Form.Group>
                             </div>
                         </div>
-
-                        {/* Última fila */}
-                        <div className="row">
-                            <div className="col-md-12">
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Departamento</Form.Label>
-                                    <Form.Select
-                                        name="departamento_id"
-                                        value={formData.departamento_id}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">Seleccione un departamento</option>
-                                        {departamentos.map((departamento) => (
-                                            <option key={departamento.id} value={departamento.id}>
-                                                {departamento.nombre}
-                                            </option>
-                                        ))}
-                                    </Form.Select>
-                                </Form.Group>
+                        <div className="d-flex justify-content-between">
+                            {isEditing && (
+                                <Button
+                                    variant="danger"
+                                    onClick={() => {
+                                        if (
+                                            window.confirm(
+                                                `¿Estás seguro de que deseas eliminar a ${formData.nombre} ${formData.apellidos}?`
+                                            )
+                                        ) {
+                                            deleteEmpleado(editId);
+                                            setShowModal(false);
+                                        }
+                                    }}
+                                >
+                                    Eliminar
+                                </Button>
+                            )}
+                            <div>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setShowModal(false)}
+                                    className="me-2"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button variant="primary" type="submit">
+                                    {isEditing ? "Actualizar" : "Crear"}
+                                </Button>
                             </div>
-                        </div>
-
-                        <div className="d-flex justify-content-end">
-                            <Button variant="secondary" onClick={() => setShowModal(false)} className="me-2">
-                                Cancelar
-                            </Button>
-                            <Button variant="primary" type="submit">
-                                {isEditing ? "Actualizar" : "Crear"}
-                            </Button>
                         </div>
                     </Form>
                 </Modal.Body>
