@@ -4,6 +4,10 @@ import { Modal, Button, Form, Table } from "react-bootstrap";
 
 const Empleados = () => {
     const [empleados, setEmpleados] = useState([]);
+    const [departamentos, setDepartamentos] = useState([]);
+    const [contratos, setContratos] = useState([]);
+    const [selectedDepartamento, setSelectedDepartamento] = useState("");
+    const [filteredEmpleados, setFilteredEmpleados] = useState([]);
     const [formData, setFormData] = useState({
         nombre: "",
         apellidos: "",
@@ -39,6 +43,47 @@ const Empleados = () => {
         } catch (error) {
             console.error("Error al obtener empleados:", error);
         }
+    };
+
+    // Obtener departamentos
+    const fetchDepartamentos = async () => {
+        try {
+            const response = await apiClient.get("departamentos/");
+            setDepartamentos(response.data);
+        } catch (error) {
+            console.error("Error al obtener departamentos:", error);
+        }
+    };
+
+    // Obtener contratos
+    const fetchContratos = async () => {
+        try {
+            const response = await apiClient.get("contratos/");
+            setContratos(response.data);
+        } catch (error) {
+            console.error("Error al obtener contratos:", error);
+        }
+    };
+
+    // Filtrar empleados por departamento
+    const filterEmpleadosByDepartamento = () => {
+        if (!selectedDepartamento) {
+            setFilteredEmpleados(empleados);
+        } else {
+            const empleadosFiltrados = empleados.filter((empleado) =>
+                contratos.some(
+                    (contrato) =>
+                        contrato.empleado === empleado.id &&
+                        contrato.cargo_departamento === parseInt(selectedDepartamento)
+                )
+            );
+            setFilteredEmpleados(empleadosFiltrados);
+        }
+    };
+
+    // Manejar cambios en el filtro de departamento
+    const handleDepartamentoChange = (e) => {
+        setSelectedDepartamento(e.target.value);
     };
 
     // Crear empleado
@@ -107,15 +152,34 @@ const Empleados = () => {
         });
     };
 
-    // Cargar empleados al montar el componente
+    // Cargar datos al montar el componente
     useEffect(() => {
         fetchEmpleados();
+        fetchDepartamentos();
+        fetchContratos();
     }, []);
+
+    // Actualizar empleados filtrados cuando cambie el departamento seleccionado o los empleados
+    useEffect(() => {
+        filterEmpleadosByDepartamento();
+    }, [selectedDepartamento, empleados]);
 
     return (
         <div className="container mt-4">
             <h1 className="mb-4 text-primary">Gestión de Empleados</h1>
-            <div className="d-flex justify-content-end mb-3">
+            <div className="d-flex justify-content-between mb-3">
+                <Form.Select
+                    value={selectedDepartamento}
+                    onChange={handleDepartamentoChange}
+                    className="w-25"
+                >
+                    <option value="">Todos los Departamentos</option>
+                    {departamentos.map((departamento) => (
+                        <option key={departamento.id} value={departamento.id}>
+                            {departamento.nombre}
+                        </option>
+                    ))}
+                </Form.Select>
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Empleado
                 </Button>
@@ -130,7 +194,7 @@ const Empleados = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {empleados.map((empleado) => (
+                    {filteredEmpleados.map((empleado) => (
                         <tr key={empleado.id}>
                             <td>{empleado.nombre}</td>
                             <td>{empleado.apellidos}</td>
@@ -142,9 +206,7 @@ const Empleados = () => {
                                     onClick={() => {
                                         setIsEditing(true);
                                         setEditId(empleado.id);
-                                        // Elimina cargo si viene del backend
-                                        const { cargo, ...rest } = empleado;
-                                        setFormData({ ...rest });
+                                        setFormData(empleado);
                                         setShowModal(true);
                                     }}
                                 >

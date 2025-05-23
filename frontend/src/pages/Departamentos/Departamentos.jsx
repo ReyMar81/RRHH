@@ -127,8 +127,8 @@ const Departamentos = () => {
                 <Modal.Header closeButton>
                     <Modal.Title>{isEditing ? "Editar Departamento" : "Crear Departamento"}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    <Form onSubmit={handleSubmit}>
+                <Form onSubmit={handleSubmit}>
+                    <Modal.Body>
                         <Form.Group className="mb-3">
                             <Form.Label>Nombre</Form.Label>
                             <Form.Control
@@ -151,45 +151,42 @@ const Departamentos = () => {
                                 required
                             />
                         </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    {/* Botón de eliminar */}
-                    {isEditing && (
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                if (
-                                    window.confirm(
-                                        `¿Estás seguro de que deseas eliminar el departamento "${formData.nombre}"?`
-                                    )
-                                ) {
-                                    deleteDepartamento(editId);
+                    </Modal.Body>
+                    <Modal.Footer>
+                        {isEditing && (
+                            <Button
+                                variant="danger"
+                                onClick={() => {
+                                    if (
+                                        window.confirm(
+                                            `¿Estás seguro de que deseas eliminar el departamento "${formData.nombre}"?`
+                                        )
+                                    ) {
+                                        deleteDepartamento(editId);
+                                        setShowModal(false);
+                                    }
+                                }}
+                            >
+                                Eliminar
+                            </Button>
+                        )}
+                        <div>
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
                                     setShowModal(false);
-                                }
-                            }}
-                        >
-                            Eliminar
-                        </Button>
-                    )}
-
-                    {/* Botones de cancelar y guardar */}
-                    <div>
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                setShowModal(false);
-                                resetForm();
-                            }}
-                            className="me-2"
-                        >
-                            Cancelar
-                        </Button>
-                        <Button variant="primary" type="submit">
-                            {isEditing ? "Actualizar" : "Crear"}
-                        </Button>
-                    </div>
-                </Modal.Footer>
+                                    resetForm();
+                                }}
+                                className="me-2"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button variant="primary" type="submit">
+                                {isEditing ? "Actualizar" : "Crear"}
+                            </Button>
+                        </div>
+                    </Modal.Footer>
+                </Form>
             </Modal>
         </div>
     );

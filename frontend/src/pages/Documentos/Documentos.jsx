@@ -1,22 +1,30 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../../services/Apirest";
 import supabase from "../../services/supabaseClient"; // Importar Supabase
-import apiClient from "../../services/Apirest"; // Usar apiClient configurado
 import { Table, Button, Modal, Form } from "react-bootstrap";
 
 const Documentos = () => {
     const [documentos, setDocumentos] = useState([]);
-    const [empleados, setEmpleados] = useState([]); // Estado para almacenar los empleados
-    const [file, setFile] = useState(null);
+    const [tipos, setTipos] = useState([]);
+    const [categorias, setCategorias] = useState([]);
+    const [empleados, setEmpleados] = useState([]);
+    const [contratos, setContratos] = useState([]);
     const [formData, setFormData] = useState({
-        nombre: "",
-        tipo_documento: "",
+        titulo: "",
+        tipo_id: "",
+        categoria_id: "",
         empleado_id: "",
+        contrato_id: "",
     });
+    const [file, setFile] = useState(null); // Estado para el archivo
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
-    const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState("");
+    const [uploading, setUploading] = useState(false); // Estado para la carga del archivo
+
+    const navigate = useNavigate();
 
     // Obtener documentos
     const fetchDocumentos = async () => {
@@ -25,6 +33,26 @@ const Documentos = () => {
             setDocumentos(response.data);
         } catch (error) {
             console.error("Error al obtener documentos:", error);
+        }
+    };
+
+    // Obtener tipos
+    const fetchTipos = async () => {
+        try {
+            const response = await apiClient.get("tipos/");
+            setTipos(response.data);
+        } catch (error) {
+            console.error("Error al obtener tipos:", error);
+        }
+    };
+
+    // Obtener categorías
+    const fetchCategorias = async () => {
+        try {
+            const response = await apiClient.get("categorias/");
+            setCategorias(response.data);
+        } catch (error) {
+            console.error("Error al obtener categorías:", error);
         }
     };
 
@@ -38,29 +66,29 @@ const Documentos = () => {
         }
     };
 
-    // Manejar cambios en el formulario
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Obtener contratos
+    const fetchContratos = async () => {
+        try {
+            const response = await apiClient.get("contratos/");
+            setContratos(response.data);
+        } catch (error) {
+            console.error("Error al obtener contratos:", error);
+        }
     };
 
-    // Manejar selección de archivo
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-    };
-
-    // Subir documento a Supabase
-    const handleUpload = async () => {
+    // Subir archivo a Supabase
+    const uploadFile = async () => {
         if (!file) {
             setMessage("Por favor, selecciona un archivo.");
-            return;
+            return null;
         }
 
         setUploading(true);
-        setMessage("");
-
         try {
-            // Subir archivo a Supabase Storage
-            const filePath = `documentos/${file.name}`;
+            // Limpia el nombre del archivo
+            const sanitizedFileName = file.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+            const filePath = `documentos/${sanitizedFileName}`;
+
             const { data, error } = await supabase.storage
                 .from("documentos") // Nombre del bucket
                 .upload(filePath, file);
@@ -74,68 +102,99 @@ const Documentos = () => {
                 .from("documentos")
                 .getPublicUrl(filePath);
 
-            const downloadURL = publicUrlData.publicUrl;
-
-            // Crear o actualizar documento en el backend
-            if (isEditing) {
-                await apiClient.put(`documentos/${editId}/`, {
-                    ...formData,
-                    url: downloadURL,
-                });
-                setMessage("Documento actualizado con éxito.");
-            } else {
-                await apiClient.post("documentos/", {
-                    ...formData,
-                    url: downloadURL,
-                });
-                setMessage("Documento subido con éxito.");
-            }
-
-            fetchDocumentos();
-            resetForm();
-            setShowModal(false);
+            return publicUrlData.publicUrl;
         } catch (error) {
             console.error("Error al subir el archivo:", error);
             setMessage("Error al subir el archivo.");
+            return null;
         } finally {
             setUploading(false);
         }
     };
 
-    // Eliminar documento
-    const deleteDocumento = async (id) => {
-        try {
-            await apiClient.delete(`documentos/${id}/`);
-            fetchDocumentos();
-            setMessage("Documento eliminado con éxito.");
-        } catch (error) {
-            console.error("Error al eliminar documento:", error);
-            setMessage("Error al eliminar el documento.");
+    // Crear o editar documento
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const fileUrl = await uploadFile();
+
+        if (!fileUrl && !isEditing) {
+            return; // No continuar si no hay archivo en creación
         }
+
+        try {
+            const payload = {
+                ...formData,
+                url: fileUrl || formData.url, // Usar la URL existente si se está editando
+            };
+
+            if (isEditing) {
+                await apiClient.put(`documentos/${editId}/`, payload);
+                setMessage("Documento actualizado con éxito.");
+            } else {
+                await apiClient.post("documentos/", payload);
+                setMessage("Documento creado con éxito.");
+            }
+            fetchDocumentos();
+            resetForm();
+            setShowModal(false);
+        } catch (error) {
+            console.error("Error al guardar el documento:", error);
+            setMessage("Error al guardar el documento.");
+        }
+    };
+
+    // Manejar cambios en el formulario
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Manejar selección de archivo
+    const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
     };
 
     // Resetear formulario
     const resetForm = () => {
         setFormData({
-            nombre: "",
-            tipo_documento: "",
+            titulo: "",
+            tipo_id: "",
+            categoria_id: "",
             empleado_id: "",
+            contrato_id: "",
         });
         setFile(null);
         setIsEditing(false);
         setEditId(null);
     };
 
-    // Cargar documentos y empleados al montar el componente
+    // Cargar datos al montar el componente
     useEffect(() => {
         fetchDocumentos();
-        fetchEmpleados(); // Cargar empleados
+        fetchTipos();
+        fetchCategorias();
+        fetchEmpleados();
+        fetchContratos();
     }, []);
 
     return (
         <div className="container mt-4">
             <h1 className="mb-4 text-primary">Gestión de Documentos</h1>
-            <div className="d-flex justify-content-end mb-3">
+            <div className="d-flex justify-content-between mb-3">
+                <div>
+                    <Button
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() => navigate("/dashboard/categorias")}
+                    >
+                        Categorías
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => navigate("/dashboard/tipos")}
+                    >
+                        Tipos
+                    </Button>
+                </div>
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Subir Documento
                 </Button>
@@ -144,10 +203,11 @@ const Documentos = () => {
                 <thead className="table-primary">
                     <tr>
                         <th>ID</th>
-                        <th>Nombre</th>
+                        <th>Título</th>
                         <th>Tipo</th>
+                        <th>Categoría</th>
                         <th>Empleado</th>
-                        <th>Fecha Subida</th>
+                        <th>Contrato</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -155,21 +215,16 @@ const Documentos = () => {
                     {documentos.map((doc) => (
                         <tr key={doc.id}>
                             <td>{doc.id}</td>
+                            <td>{doc.titulo}</td>
+                            <td>{tipos.find((tipo) => tipo.id === doc.tipo_id)?.nombre || "—"}</td>
+                            <td>{categorias.find((cat) => cat.id === doc.categoria_id)?.nombre || "—"}</td>
                             <td>
-                                <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                                    {doc.nombre}
-                                </a>
+                                {empleados.find((emp) => emp.id === doc.empleado_id)?.nombre || "—"}
                             </td>
-                            <td>{doc.tipo_documento}</td>
                             <td>
-                                {
-                                    empleados.find((emp) => emp.id === doc.empleado_id)?.nombre ||
-                                    "Desconocido"
-                                }
+                                {contratos.find((con) => con.id === doc.contrato_id)?.tipo_contrato || "—"}
                             </td>
-                            <td>{new Date(doc.fecha_subida).toLocaleString()}</td>
                             <td>
-                                {/* Botón de los 3 puntos */}
                                 <Button
                                     variant="link"
                                     className="p-0"
@@ -177,9 +232,12 @@ const Documentos = () => {
                                         setIsEditing(true);
                                         setEditId(doc.id);
                                         setFormData({
-                                            nombre: doc.nombre,
-                                            tipo_documento: doc.tipo_documento,
+                                            titulo: doc.titulo,
+                                            tipo_id: doc.tipo_id,
+                                            categoria_id: doc.categoria_id,
                                             empleado_id: doc.empleado_id,
+                                            contrato_id: doc.contrato_id,
+                                            url: doc.url, // Guardar la URL existente
                                         });
                                         setShowModal(true);
                                     }}
@@ -192,7 +250,7 @@ const Documentos = () => {
                 </tbody>
             </Table>
 
-            {/* Modal para subir/editar documentos */}
+            {/* Modal para crear/editar documento */}
             <Modal
                 show={showModal}
                 onHide={() => {
@@ -206,28 +264,49 @@ const Documentos = () => {
                     <Modal.Title>{isEditing ? "Editar Documento" : "Subir Documento"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
+                    <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Nombre</Form.Label>
+                            <Form.Label>Título</Form.Label>
                             <Form.Control
                                 type="text"
-                                name="nombre"
-                                placeholder="Nombre del documento"
-                                value={formData.nombre}
+                                name="titulo"
+                                placeholder="Título del documento"
+                                value={formData.titulo}
                                 onChange={handleChange}
                                 required
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Tipo de Documento</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="tipo_documento"
-                                placeholder="Tipo de documento"
-                                value={formData.tipo_documento}
+                            <Form.Label>Tipo</Form.Label>
+                            <Form.Select
+                                name="tipo_id"
+                                value={formData.tipo_id}
                                 onChange={handleChange}
                                 required
-                            />
+                            >
+                                <option value="">Seleccione un tipo</option>
+                                {tipos.map((tipo) => (
+                                    <option key={tipo.id} value={tipo.id}>
+                                        {tipo.nombre}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Categoría</Form.Label>
+                            <Form.Select
+                                name="categoria_id"
+                                value={formData.categoria_id}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccione una categoría</option>
+                                {categorias.map((categoria) => (
+                                    <option key={categoria.id} value={categoria.id}>
+                                        {categoria.nombre}
+                                    </option>
+                                ))}
+                            </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Empleado</Form.Label>
@@ -246,6 +325,21 @@ const Documentos = () => {
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
+                            <Form.Label>Contrato</Form.Label>
+                            <Form.Select
+                                name="contrato_id"
+                                value={formData.contrato_id}
+                                onChange={handleChange}
+                            >
+                                <option value="">Seleccione un contrato</option>
+                                {contratos.map((contrato) => (
+                                    <option key={contrato.id} value={contrato.id}>
+                                        {contrato.tipo_contrato}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
                             <Form.Label>Archivo</Form.Label>
                             <Form.Control
                                 type="file"
@@ -254,46 +348,25 @@ const Documentos = () => {
                                 required={!isEditing}
                             />
                         </Form.Group>
+                        <div className="d-flex justify-content-end">
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    resetForm();
+                                }}
+                                className="me-2"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button variant="primary" type="submit" disabled={uploading}>
+                                {uploading ? "Subiendo..." : isEditing ? "Actualizar" : "Crear"}
+                            </Button>
+                        </div>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer>
-                    {/* Botón de eliminar */}
-                    {isEditing && (
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                if (
-                                    window.confirm(
-                                        `¿Estás seguro de que deseas eliminar el documento "${formData.nombre}"?`
-                                    )
-                                ) {
-                                    deleteDocumento(editId);
-                                    setShowModal(false);
-                                }
-                            }}
-                        >
-                            Eliminar
-                        </Button>
-                    )}
-
-                    {/* Botones de cancelar y guardar */}
-                    <div>
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                setShowModal(false);
-                                resetForm();
-                            }}
-                            className="me-2"
-                        >
-                            Cancelar
-                        </Button>
-                        <Button variant="primary" onClick={handleUpload} disabled={uploading}>
-                            {uploading ? "Subiendo..." : isEditing ? "Actualizar" : "Subir"}
-                        </Button>
-                    </div>
-                </Modal.Footer>
             </Modal>
+
             {message && <div className="mt-3 alert alert-info">{message}</div>}
         </div>
     );

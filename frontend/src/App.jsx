@@ -6,6 +6,10 @@ import Empleados from './pages/Empleados/Empleados';
 import Documentos from './pages/Documentos/Documentos';
 import Cargos from './pages/Departamentos/Cargos';
 import Asistencia from './pages/Asistencia/Asistencia';
+import Contratos from './pages/Contratos/Contratos';
+import Categorias from './pages/Documentos/Categorias'; 
+import Tipos from './pages/Documentos/Tipos'; 
+
 function App() {
   return (
     <Router>
@@ -16,7 +20,10 @@ function App() {
           <Route path="empleados" element={<Empleados />} />
           <Route path="documentos" element={<Documentos />} />
           <Route path="cargos" element={<Cargos />} />
-          <Route path="asistencia" element={<Asistencia/>} />
+          <Route path="asistencia" element={<Asistencia />} />
+          <Route path="contratos" element={<Contratos />} />
+          <Route path="categorias" element={<Categorias />} /> 
+          <Route path="tipos" element={<Tipos />} /> 
         </Route>
       </Routes>
     </Router>

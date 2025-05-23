@@ -1,0 +1,313 @@
+import React, { useEffect, useState } from "react";
+import apiClient from "../../services/Apirest";
+import { Table, Button, Modal, Form } from "react-bootstrap";
+
+const Contratos = () => {
+    const [contratos, setContratos] = useState([]);
+    const [empleados, setEmpleados] = useState([]);
+    const [cargos, setCargos] = useState([]);
+    const [formData, setFormData] = useState({
+        tipo_contrato: "",
+        fecha_inicio: "",
+        fecha_fin: "",
+        salario_personalizado: "",
+        estado: "",
+        observaciones: "",
+        empleado: "",
+        cargo_departamento: "",
+    });
+    const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editId, setEditId] = useState(null);
+
+    // Obtener contratos
+    const fetchContratos = async () => {
+        try {
+            const response = await apiClient.get("contratos/");
+            setContratos(response.data);
+        } catch (error) {
+            console.error("Error al obtener contratos:", error);
+        }
+    };
+
+    // Obtener empleados
+    const fetchEmpleados = async () => {
+        try {
+            const response = await apiClient.get("empleados/");
+            setEmpleados(response.data);
+        } catch (error) {
+            console.error("Error al obtener empleados:", error);
+        }
+    };
+
+    // Obtener cargos
+    const fetchCargos = async () => {
+        try {
+            const response = await apiClient.get("cargos/");
+            setCargos(response.data);
+        } catch (error) {
+            console.error("Error al obtener cargos:", error);
+        }
+    };
+
+    // Manejar cambios en el formulario
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Crear o editar contrato
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditing) {
+                await apiClient.put(`contratos/${editId}/`, formData);
+            } else {
+                await apiClient.post("contratos/", formData);
+            }
+            fetchContratos();
+            resetForm();
+            setShowModal(false);
+        } catch (error) {
+            console.error("Error al guardar el contrato:", error);
+        }
+    };
+
+    // Eliminar contrato
+    const deleteContrato = async (id) => {
+        if (window.confirm("¿Estás seguro de eliminar este contrato?")) {
+            try {
+                await apiClient.delete(`contratos/${id}/`);
+                fetchContratos();
+            } catch (error) {
+                console.error("Error al eliminar contrato:", error);
+            }
+        }
+    };
+
+    // Resetear formulario
+    const resetForm = () => {
+        setFormData({
+            tipo_contrato: "",
+            fecha_inicio: "",
+            fecha_fin: "",
+            salario_personalizado: "",
+            estado: "",
+            observaciones: "",
+            empleado: "",
+            cargo_departamento: "",
+        });
+        setIsEditing(false);
+        setEditId(null);
+    };
+
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        fetchContratos();
+        fetchEmpleados();
+        fetchCargos();
+    }, []);
+
+    return (
+        <div className="container mt-4">
+            <h1 className="mb-4 text-primary">Gestión de Contratos</h1>
+            <Button variant="primary" onClick={() => setShowModal(true)}>
+                Crear Contrato
+            </Button>
+            <Table striped bordered hover responsive className="mt-3">
+                <thead className="table-primary">
+                    <tr>
+                        <th>Empleado</th>
+                        <th>Cargo</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {contratos.map((contrato) => (
+                        <tr key={contrato.id}>
+                            <td>
+                                {empleados.find((e) => e.id === contrato.empleado)?.nombre || "—"}
+                            </td>
+                            <td>
+                                {cargos.find((c) => c.id === contrato.cargo_departamento)?.nombre || "—"}
+                            </td>
+                            <td>{contrato.tipo_contrato}</td>
+                            <td>{contrato.estado}</td>
+                            <td>{contrato.fecha_inicio}</td>
+                            <td>{contrato.fecha_fin || "—"}</td>
+                            <td>
+                                <Button
+                                    variant="link"
+                                    className="p-0"
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setEditId(contrato.id);
+                                        setFormData(contrato);
+                                        setShowModal(true);
+                                    }}
+                                >
+                                    <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+
+            {/* Modal para crear/editar contrato */}
+            <Modal
+                show={showModal}
+                onHide={() => {
+                    setShowModal(false);
+                    resetForm();
+                }}
+                centered
+                backdrop="static"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>{isEditing ? "Editar Contrato" : "Crear Contrato"}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleSubmit}>
+                        {/* Campos del formulario */}
+                        <Form.Group className="mb-3">
+                            <Form.Label>Empleado</Form.Label>
+                            <Form.Select
+                                name="empleado"
+                                value={formData.empleado}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccione un empleado</option>
+                                {empleados.map((empleado) => (
+                                    <option key={empleado.id} value={empleado.id}>
+                                        {empleado.nombre}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Cargo</Form.Label>
+                            <Form.Select
+                                name="cargo_departamento"
+                                value={formData.cargo_departamento}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccione un cargo</option>
+                                {cargos.map((cargo) => (
+                                    <option key={cargo.id} value={cargo.id}>
+                                        {cargo.nombre}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Tipo de Contrato</Form.Label>
+                            <Form.Select
+                                name="tipo_contrato"
+                                value={formData.tipo_contrato}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccione un tipo de contrato</option>
+                                <option value="INDEFINIDO">Indefinido</option>
+                                <option value="PLAZO FIJO">Plazo fijo</option>
+                                <option value="MEDIO TIEMPO">Medio tiempo</option>
+                                <option value="PASANTIA">Pasantía</option>
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Estado</Form.Label>
+                            <Form.Select
+                                name="estado"
+                                value={formData.estado}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Seleccione un estado</option>
+                                <option value="ACTIVO">Activo</option>
+                                <option value="FINALIZADO">Finalizado</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="RENOVADO">Renovado</option>
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Fecha Inicio</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="fecha_inicio"
+                                value={formData.fecha_inicio}
+                                onChange={handleChange}
+                                required
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Fecha Fin</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="fecha_fin"
+                                value={formData.fecha_fin}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Salario Personalizado</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="salario_personalizado"
+                                value={formData.salario_personalizado}
+                                onChange={handleChange}
+                                step="0.01"
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Observaciones</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                name="observaciones"
+                                value={formData.observaciones}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+                        <div className="d-flex justify-content-between">
+                            {isEditing && (
+                                <Button
+                                    variant="danger"
+                                    onClick={() => {
+                                        if (window.confirm("¿Estás seguro de eliminar este contrato?")) {
+                                            deleteContrato(editId);
+                                            setShowModal(false);
+                                        }
+                                    }}
+                                >
+                                    Eliminar
+                                </Button>
+                            )}
+                            <div className="d-flex">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        resetForm();
+                                    }}
+                                    className="me-2"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button variant="primary" type="submit">
+                                    {isEditing ? "Actualizar" : "Crear"}
+                                </Button>
+                            </div>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+        </div>
+    );
+};
+
+export default Contratos;
