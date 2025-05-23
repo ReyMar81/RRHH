@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'security',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +53,8 @@ INSTALLED_APPS = [
     'apps.asistencia',
     'apps.horas_extras',
     'apps.contrato',
-    'security',
+    'apps.tipo',
+    'apps.categoria',
 ]
 
 MIDDLEWARE = [
@@ -162,6 +164,6 @@ SIMPLE_JWT = {
 # Modificaciones propias
 CORS_ALLOW_ALL_ORIGINS = True  # (o solo los necesarios en producción)
 
-AUTH_USER_MODEL = 'auth.User'  # Esto debería ser el valor predeterminado
+AUTH_USER_MODEL = 'security.Usuario'
 # Configuración de email para desarrollo (muestra los correos en consola)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

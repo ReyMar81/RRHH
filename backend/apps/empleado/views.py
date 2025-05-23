@@ -7,11 +7,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-
-
-
-
-
 # Create your views here.
 
 class EmpleadoViewSets(viewsets.ModelViewSet):
@@ -26,7 +21,6 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         empleado, username, password = crear_empleado_con_usuario(serializer.validated_data)
 
         response_data = self.get_serializer(empleado).data
-        response_data.update({'username': username, 'password': password})
         return Response(response_data, status=status.HTTP_201_CREATED)
     
 class CambiarPasswordEmpleadoView(APIView):

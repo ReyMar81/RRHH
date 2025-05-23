@@ -1,8 +1,15 @@
+from django.urls import path
+from .views import AsistenciaViewSet, MisAsistenciasAPIView, RegistroAsistenciaViewSet
 from rest_framework.routers import DefaultRouter
 
-from apps.asistencia.views import AsistenciViewSet
-
 router = DefaultRouter()
-router.register(r'asistencias', AsistenciViewSet)
+router.register(r'asistencias', AsistenciaViewSet, basename='asistencias')
 
-urlpatterns = router.urls
+registro_asistencia = RegistroAsistenciaViewSet.as_view({'post': 'create'})
+
+urlpatterns = [
+    path('registrar/', registro_asistencia, name='registrar-asistencia'),
+    path('mis_asistencias/', MisAsistenciasAPIView.as_view(), name='mis-asistencias'),
+]
+
+urlpatterns += router.urls

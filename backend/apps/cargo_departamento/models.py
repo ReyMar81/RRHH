@@ -18,3 +18,5 @@ class CargoDepartamento(models.Model):
         on_delete=models.PROTECT,
         related_name='departamento_cargos'
     )
+    class Meta:
+        unique_together = ('id_cargo', 'id_departamento')

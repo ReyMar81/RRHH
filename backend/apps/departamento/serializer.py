@@ -7,7 +7,7 @@ class SubDepartamentoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion']
 
 class DepartamentoSerializers(serializers.ModelSerializer):
-    departamentos = SubDepartamentoSerializer(many=True, read_only=True)
+    subdepartamentos = SubDepartamentoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Departamento

@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -13,7 +12,9 @@ urlpatterns = [
     path('api/', include('apps.departamento.urls')),
     path('api/', include('apps.cargo.urls')),
     path('api/', include('apps.cargo_departamento.urls')),
-    path('api/', include('apps.asistencia.urls')),
+    path('api/asistencia/', include('apps.asistencia.urls')),
     path('api/', include('apps.horas_extras.urls')),
-    path('api/', include('apps.contrato.urls'))
+    path('api/', include('apps.contrato.urls')),
+    path('api/', include('apps.tipo.urls')),
+    path('api/', include('apps.categoria.urls')),
 ]

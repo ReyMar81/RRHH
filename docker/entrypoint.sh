@@ -8,9 +8,11 @@ fi
 
 cd /app/backend
 
-# Ejecutar migraciones de Django antes de iniciar el servidor
-echo "🔄 Ejecutando makemigrations y migrate..."
-python manage.py makemigrations --noinput
+# Ejecutar makemigrations para todas las apps antes de migrate
+echo "🔄 Ejecutando makemigrations para todas las apps..."
+python manage.py makemigrations
+
+echo "🔄 Ejecutando migrate..."
 python manage.py migrate --noinput
 
 # Crear superusuario automáticamente si no existe

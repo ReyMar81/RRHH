@@ -1,7 +1,7 @@
 from rest_framework.routers import DefaultRouter
-from .views import DepartamentoViewSet
+from .views import TipoViewSet
 
 router = DefaultRouter()
-router.register(r'departamentos', DepartamentoViewSet)
+router.register(r'tipos', TipoViewSet)
 
 urlpatterns = router.urls

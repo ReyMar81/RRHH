@@ -1,12 +1,19 @@
 from django.db import models
-from django.db.models import ForeignKey, Model
+from django.db.models import ForeignKey
 
+
+TIPO_PAGO_CHOICES = [
+    ('mensual', 'Mensual'),
+    ('quincenal', 'Quincenal'),
+    ('semanal', 'Semanal'),
+    ('diario', 'Diario'),
+    ('hora', 'Por hora'),
+]
 
 # Create your models here.
-
 class Cargo(models.Model):
     nombre = models.CharField(max_length=50)
-    tipo_pago = models.CharField(max_length=50)
+    tipo_pago = models.CharField(max_length=20, choices=TIPO_PAGO_CHOICES)
     salario = models.DecimalField(max_digits=10, decimal_places=2)
     horas_por_dia = models.DurationField()
     horario_inicio = models.TimeField()
