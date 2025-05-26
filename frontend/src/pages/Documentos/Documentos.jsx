@@ -215,7 +215,15 @@ const Documentos = () => {
                     {documentos.map((doc) => (
                         <tr key={doc.id}>
                             <td>{doc.id}</td>
-                            <td>{doc.titulo}</td>
+                            <td>
+                                {doc.url ? (
+                                    <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                                        {doc.titulo}
+                                    </a>
+                                ) : (
+                                    doc.titulo
+                                )}
+                            </td>
                             <td>{tipos.find((tipo) => tipo.id === doc.tipo_id)?.nombre || "—"}</td>
                             <td>{categorias.find((cat) => cat.id === doc.categoria_id)?.nombre || "—"}</td>
                             <td>
