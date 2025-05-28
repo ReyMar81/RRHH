@@ -9,6 +9,7 @@ import Asistencia from './pages/Asistencia/Asistencia';
 import Contratos from './pages/Contratos/Contratos';
 import Categorias from './pages/Documentos/Categorias'; 
 import Tipos from './pages/Documentos/Tipos'; 
+import CargosDepartamentos from './pages/Departamentos/CargosDepartamentos';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="contratos" element={<Contratos />} />
           <Route path="categorias" element={<Categorias />} /> 
           <Route path="tipos" element={<Tipos />} /> 
+          <Route path="cargos_departamentos" element={<CargosDepartamentos />} />
         </Route>
       </Routes>
     </Router>

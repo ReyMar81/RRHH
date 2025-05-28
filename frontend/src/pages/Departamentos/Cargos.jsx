@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Importar useNavigate para redirigir
 import apiClient from "../../services/Apirest";
 import { Table, Button, Modal, Form } from "react-bootstrap";
 
 const Cargos = () => {
     const [cargos, setCargos] = useState([]);
-    const [departamentos, setDepartamentos] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
@@ -17,6 +17,8 @@ const Cargos = () => {
         horario_fin: "",
         cargo_padre: "",
     });
+
+    const navigate = useNavigate(); // Hook para redirigir
 
     // Obtener cargos desde el backend
     const fetchCargos = async () => {
@@ -109,6 +111,13 @@ const Cargos = () => {
             <h1 className="mb-4 text-primary">Gestión de Cargos</h1>
             <Button variant="primary" onClick={() => { resetForm(); setShowModal(true); }}>
                 Crear Cargo
+            </Button>
+            <Button
+                variant="secondary"
+                className="ms-2"
+                onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a la nueva página
+            >
+                Cargo Departamento
             </Button>
             <Table striped bordered hover responsive className="mt-3">
                 <thead className="table-primary">

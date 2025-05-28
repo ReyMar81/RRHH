@@ -52,18 +52,48 @@ const Contratos = () => {
 
     // Manejar cambios en el formulario
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        // Limpiar fecha_fin si el tipo de contrato es "INDEFINIDO"
+        if (name === "tipo_contrato" && value === "INDEFINIDO") {
+            setFormData({ ...formData, [name]: value, fecha_fin: "" });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     // Crear o editar contrato
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Obtener el salario del cargo seleccionado si no se proporciona un salario personalizado
+        const cargoSeleccionado = cargos.find((cargo) => cargo.id === parseInt(formData.cargo_departamento, 10));
+        const salarioFinal = formData.salario_personalizado || (cargoSeleccionado ? cargoSeleccionado.salario : null);
+
+        if (!salarioFinal) {
+            alert("Debe seleccionar un cargo válido o proporcionar un salario personalizado.");
+            return;
+        }
+
+        // Validar que la fecha de fin sea opcional solo para contratos indefinidos
+        if (formData.tipo_contrato !== "INDEFINIDO" && !formData.fecha_fin) {
+            alert("Debe proporcionar una fecha de fin para este tipo de contrato.");
+            return;
+        }
+
         try {
+            const dataToSend = {
+                ...formData,
+                fecha_fin: formData.fecha_fin || null, // Enviar null si fecha_fin está vacío
+                salario_personalizado: salarioFinal,
+            };
+
             if (isEditing) {
-                await apiClient.put(`contratos/${editId}/`, formData);
+                await apiClient.put(`contratos/${editId}/`, dataToSend);
             } else {
-                await apiClient.post("contratos/", formData);
+                await apiClient.post("contratos/", dataToSend);
             }
+
             fetchContratos();
             resetForm();
             setShowModal(false);
@@ -245,15 +275,18 @@ const Contratos = () => {
                                 required
                             />
                         </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Fecha Fin</Form.Label>
-                            <Form.Control
-                                type="date"
-                                name="fecha_fin"
-                                value={formData.fecha_fin}
-                                onChange={handleChange}
-                            />
-                        </Form.Group>
+                        {/* Mostrar el campo de Fecha Fin solo si el tipo de contrato no es indefinido */}
+                        {formData.tipo_contrato !== "INDEFINIDO" && (
+                            <Form.Group className="mb-3">
+                                <Form.Label>Fecha Fin</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    name="fecha_fin"
+                                    value={formData.fecha_fin}
+                                    onChange={handleChange}
+                                />
+                            </Form.Group>
+                        )}
                         <Form.Group className="mb-3">
                             <Form.Label>Salario Personalizado</Form.Label>
                             <Form.Control

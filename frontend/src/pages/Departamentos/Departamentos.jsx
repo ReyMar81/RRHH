@@ -84,6 +84,13 @@ const Departamentos = () => {
                     >
                         Cargos
                     </Button>
+                    <Button
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a CargosDepartamentos
+                    >
+                        Cargo Departamento
+                    </Button>
                 </div>
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Departamento
@@ -92,7 +99,6 @@ const Departamentos = () => {
             <Table striped bordered hover responsive className="table-sm">
                 <thead className="table-primary">
                     <tr>
-                        <th>ID</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
                         <th>Acciones</th>
@@ -101,7 +107,6 @@ const Departamentos = () => {
                 <tbody>
                     {departamentos.map((departamento) => (
                         <tr key={departamento.id}>
-                            <td>{departamento.id}</td>
                             <td>{departamento.nombre}</td>
                             <td>{departamento.descripcion}</td>
                             <td>

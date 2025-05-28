@@ -202,7 +202,6 @@ const Documentos = () => {
             <Table striped bordered hover responsive>
                 <thead className="table-primary">
                     <tr>
-                        <th>ID</th>
                         <th>Título</th>
                         <th>Tipo</th>
                         <th>Categoría</th>
@@ -214,7 +213,6 @@ const Documentos = () => {
                 <tbody>
                     {documentos.map((doc) => (
                         <tr key={doc.id}>
-                            <td>{doc.id}</td>
                             <td>
                                 {doc.url ? (
                                     <a href={doc.url} target="_blank" rel="noopener noreferrer">
