@@ -6,4 +6,4 @@ from apps.horas_extras.models import HorasExtras
 class HorasExtrasSerializer(serializers.ModelSerializer):
     class Meta:
         model = HorasExtras
-        fields = '__all__'
+        exclude = ['empresa']

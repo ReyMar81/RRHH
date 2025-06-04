@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from apps.empresas.models import Empresa
 User = get_user_model()
 
 # choices
@@ -30,3 +31,4 @@ class Empleado(models.Model):
     correo_personal = models.EmailField(max_length=254, null=True, blank=True)
     user_id = models.OneToOneField(User, on_delete=models.CASCADE, 
                                    related_name='empleado', blank=True)
+    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)

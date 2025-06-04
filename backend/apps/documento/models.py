@@ -1,4 +1,5 @@
 from django.db import models
+from apps.empresas.models import Empresa
 
 # Create your models here.
 
@@ -11,3 +12,4 @@ class Documento(models.Model):
     categoria_id = models.ForeignKey('categoria.Categoria', on_delete=models.PROTECT)
     empleado_id = models.ForeignKey('empleado.Empleado', on_delete=models.CASCADE)
     contrato_id = models.ForeignKey('contrato.Contrato', on_delete=models.SET_NULL, null=True, blank=True)
+    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)

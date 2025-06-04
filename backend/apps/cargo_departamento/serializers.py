@@ -6,4 +6,4 @@ from apps.cargo_departamento.models import CargoDepartamento
 class CargoDepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CargoDepartamento
-        fields = '__all__'
+        exclude  = ['empresa']

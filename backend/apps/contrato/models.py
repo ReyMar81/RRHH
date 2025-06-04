@@ -2,6 +2,7 @@ from django.db import models
 
 from apps.cargo_departamento.models import CargoDepartamento
 from apps.empleado.models import Empleado
+from apps.empresas.models import Empresa
 
 # choices
 TIPOS_CONTRATO = [
@@ -29,3 +30,4 @@ class Contrato(models.Model):
     observaciones = models.CharField(max_length=100, null=True, blank=True)
     empleado = models.ForeignKey(Empleado, on_delete=models.PROTECT, related_name='contratos')
     cargo_departamento = models.ForeignKey(CargoDepartamento, on_delete=models.PROTECT, related_name='contratos')
+    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
