@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import ForeignKey
-
+from apps.empresas.models import Empresa
 
 TIPO_PAGO_CHOICES = [
     ('mensual', 'Mensual'),
@@ -25,3 +25,4 @@ class Cargo(models.Model):
         blank=True,
         related_name='subcargos'
     )
+    empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)

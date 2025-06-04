@@ -9,5 +9,10 @@ from apps.horas_extras.serializers import HorasExtrasSerializer
 
 class HorasExtrasViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = HorasExtras.objects.all()
     serializer_class = HorasExtrasSerializer
+    
+    def get_queryset(self):
+        return HorasExtras.objects.filter(empresa=self.request.user.empresa)
+
+    def perform_create(self, serializer):
+        serializer.save(empresa=self.request.user.empresa)

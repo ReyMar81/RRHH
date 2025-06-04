@@ -9,5 +9,10 @@ from apps.cargo_departamento.serializers import CargoDepartamentoSerializer
 
 class CargoDepartamentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = CargoDepartamento.objects.all()
     serializer_class = CargoDepartamentoSerializer
+    
+    def get_queryset(self):
+        return CargoDepartamento.objects.filter(empresa=self.request.user.empresa)
+
+    def perform_create(self, serializer):
+        serializer.save(empresa=self.request.user.empresa)

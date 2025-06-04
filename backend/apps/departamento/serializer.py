@@ -11,7 +11,7 @@ class DepartamentoSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Departamento
-        fields = '__all__'
+        exclude = ['empresa']
 
 class EmpleadoEstadoAsistenciaSerializer(serializers.Serializer):
     id = serializers.IntegerField()

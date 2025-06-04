@@ -6,11 +6,11 @@ from .models import Cargo
 class SubCargosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cargo
-        fields = ['id', 'nombre', 'tipo_pago', 'salario']
+        exclude = ['id', 'nombre', 'tipo_pago', 'salario', 'empresa']
 
 class CargoSerializer(serializers.ModelSerializer):
     subcargos = SubCargosSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cargo
-        fields = '__all__'
+        exclude = ['empresa']

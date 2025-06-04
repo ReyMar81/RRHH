@@ -30,7 +30,10 @@ class RegistroAsistenciaViewSet(viewsets.ViewSet):
             asistencia, creada = Asistencia.objects.get_or_create(
                 empleado=empleado,
                 fecha=hoy,
-                defaults={'hora_entrada': ahora}
+                defaults={
+                    'hora_entrada': ahora,
+                    'empresa': empleado.empresa    #Auemnte
+                }
             )
 
             if not creada:
@@ -71,11 +74,13 @@ class AsistenciaViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AsistenciaSerializer
     permission_classes = [IsAuthenticated]
 
+
+    ##!! FIJARSE EN ENTE SI FUCIONA LE HICE MODIFICACIONES
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return Asistencia.objects.all()
-        return Asistencia.objects.filter(empleado__user=user)
+            return Asistencia.objects.filter(empresa=user.empresa)
+        return Asistencia.objects.filter(empleado__user=user, empresa=user.empresa)
 
 class MisAsistenciasAPIView(APIView):
     permission_classes = [IsAuthenticated]

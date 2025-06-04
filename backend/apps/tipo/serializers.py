@@ -4,4 +4,4 @@ from .models import Tipo
 class TipoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tipo
-        fields = '__all__'
+        exclude = ['empresa']

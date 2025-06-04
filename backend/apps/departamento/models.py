@@ -1,4 +1,5 @@
 from django.db import models
+from apps.empresas.models import Empresa
 
 # Create your models here.
 
@@ -14,3 +15,4 @@ class Departamento(models.Model):
         blank=True,
         related_name='subdepartamentos'
     )
+    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
