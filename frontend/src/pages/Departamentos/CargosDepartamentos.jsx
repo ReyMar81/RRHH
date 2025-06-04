@@ -109,8 +109,8 @@ const CargosDepartamentos = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Cargos-Departamentos</h1>
-            <Button variant="primary" onClick={() => setShowModal(true)}>
+            <h1 className="mb-4">Gestión de Cargos-Departamentos</h1>
+            <Button onClick={() => setShowModal(true)}>
                 Crear Relación
             </Button>
             <Table striped bordered hover responsive className="mt-3">

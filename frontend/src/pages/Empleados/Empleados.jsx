@@ -166,7 +166,7 @@ const Empleados = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Empleados</h1>
+            <h1 className="mb-4">Gestión de Empleados</h1>
             <div className="d-flex justify-content-between mb-3">
                 <Form.Select
                     value={selectedDepartamento}

@@ -108,12 +108,11 @@ const Cargos = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Cargos</h1>
-            <Button variant="primary" onClick={() => { resetForm(); setShowModal(true); }}>
+            <h1 className="mb-4">Gestión de Cargos</h1>
+            <Button  onClick={() => { resetForm(); setShowModal(true); }}>
                 Crear Cargo
             </Button>
             <Button
-                variant="secondary"
                 className="ms-2"
                 onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a la nueva página
             >

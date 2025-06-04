@@ -74,25 +74,23 @@ const Departamentos = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Departamentos</h1>
+            <h1 className="mb-4">Gestión de Departamentos</h1>
             <div className="d-flex justify-content-between mb-3">
                 <div>
                     <Button
-                        variant="secondary"
                         className="me-2"
                         onClick={() => navigate("/dashboard/cargos")}
                     >
                         Cargos
                     </Button>
                     <Button
-                        variant="secondary"
                         className="me-2"
                         onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a CargosDepartamentos
                     >
                         Cargo Departamento
                     </Button>
                 </div>
-                <Button variant="primary" onClick={() => setShowModal(true)}>
+                <Button onClick={() => setShowModal(true)}>
                     Crear Departamento
                 </Button>
             </div>
@@ -189,7 +187,6 @@ const Departamentos = () => {
                         )}
                         <div>
                             <Button
-                                variant="secondary"
                                 onClick={() => {
                                     setShowModal(false);
                                     resetForm();

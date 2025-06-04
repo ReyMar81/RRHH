@@ -178,24 +178,22 @@ const Documentos = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Documentos</h1>
+            <h1 className="mb-4 ">Gestión de Documentos</h1>
             <div className="d-flex justify-content-between mb-3">
                 <div>
                     <Button
-                        variant="secondary"
                         className="me-2"
                         onClick={() => navigate("/dashboard/categorias")}
                     >
                         Categorías
                     </Button>
                     <Button
-                        variant="secondary"
                         onClick={() => navigate("/dashboard/tipos")}
                     >
                         Tipos
                     </Button>
                 </div>
-                <Button variant="primary" onClick={() => setShowModal(true)}>
+                <Button onClick={() => setShowModal(true)}>
                     Subir Documento
                 </Button>
             </div>

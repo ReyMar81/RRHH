@@ -11,7 +11,8 @@ export const refreshAccessToken = async () => {
     try {
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) {
-            throw new Error("No refresh token found");
+            console.error("No refresh token found");
+            return null; // No eliminar tokens aquí
         }
 
         const response = await axios.post(`${Apiurl}token/refresh/`, {
@@ -23,7 +24,8 @@ export const refreshAccessToken = async () => {
         return response.data.access;
     } catch (error) {
         console.error("Error al renovar el token:", error);
-        // Redirigir al login si el refresh token también ha expirado
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         window.location.href = "/";
         throw error;
     }
@@ -34,12 +36,16 @@ apiClient.interceptors.request.use(
     async (config) => {
         let token = localStorage.getItem("access_token");
 
-        // Verificar si el token ha expirado
         if (isTokenExpired(token)) {
-            token = await refreshAccessToken();
+            try {
+                token = await refreshAccessToken();
+            } catch (error) {
+                console.error("Error al renovar el token:", error);
+                window.location.href = "/";
+                return Promise.reject(error);
+            }
         }
 
-        // Agregar el token al encabezado Authorization
         config.headers.Authorization = `Bearer ${token}`;
         return config;
     },

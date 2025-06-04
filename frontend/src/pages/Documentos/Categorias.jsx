@@ -80,7 +80,7 @@ const Categoria = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Gestión de Categorías</h1>
+            <h1 className="mb-4 ">Gestión de Categorías</h1>
             <div className="d-flex justify-content-between mb-3">
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Categoría

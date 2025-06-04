@@ -26,7 +26,7 @@ const Asistencia = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4 text-primary">Asistencias</h1>
+            <h1 className="mb-4">Asistencias</h1>
             <Table striped bordered hover responsive>
                 <thead className="table-primary">
                     <tr>

@@ -1,7 +1,7 @@
 // src/components/Dashboard/Dashboard.js
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
+import { Container, ThemeProvider } from 'react-bootstrap';
 import './Dashboard.css'; // Archivo CSS para estilos personalizados
 
 const Dashboard = () => {
@@ -20,11 +20,7 @@ const Dashboard = () => {
     return (
         <div className="dashboard-container d-flex">
             {/* Sidebar */}
-            <nav
-                className={`sidebar bg-primary text-white d-flex flex-column ${
-                    sidebarCollapsed ? 'collapsed' : ''
-                }`}
-            >
+            <nav className="sidebar">
                 <div className="sidebar-header p-3 d-flex justify-content-between align-items-center">
                     <h5 className="m-0">RRHH</h5>
                     <button
@@ -65,6 +61,12 @@ const Dashboard = () => {
                             <span className="ms-2">Contratos</span>
                         </Link>
                     </li>
+                    <li className="nav-item">
+                        <Link to="perfil" className="nav-link text-white p-3 d-flex align-items-center">
+                            <i className="bi bi-person-circle"></i>
+                            <span className="ms-2">Perfil</span>
+                        </Link>
+                    </li>
                 </ul>
                 <div className="sidebar-footer p-3 text-center">
                     <button className="btn btn-sm btn-light" onClick={handleLogout}>
@@ -74,11 +76,14 @@ const Dashboard = () => {
             </nav>
 
             {/* Content Wrapper */}
+
             <div className="content-wrapper flex-grow-1">
                 <Container fluid className="p-4">
                     {/* Main Content */}
-                    <div className="main-content bg-white rounded shadow-sm p-4">
-                        <Outlet />
+                    <div className="main-content rounded shadow-sm p-4">
+                        <ThemeProvider>
+                            <Outlet />
+                        </ThemeProvider>
                     </div>
                 </Container>
             </div>

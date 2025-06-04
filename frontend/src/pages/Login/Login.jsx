@@ -21,7 +21,7 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${Apiurl}token/`, formData);
+            const response = await axios.post(`${Apiurl}security/token/`, formData);
             // Guardar los tokens en el almacenamiento local
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
@@ -36,7 +36,7 @@ function Login() {
     return (
         <div className="login-container d-flex justify-content-center align-items-center min-vh-100">
             <div className="login-card card p-4 shadow-lg">
-                <h3 className="text-center mb-4 text-primary">Bienvenido</h3>
+                <h3 className="text-center mb-4 ">Bienvenido</h3>
                 <form onSubmit={handleSubmit}>
                     {/* Mostrar mensaje de error */}
                     {error && <div className="alert alert-danger">{error}</div>}
