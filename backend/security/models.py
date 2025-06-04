@@ -4,6 +4,7 @@ from apps.empresas.models import Empresa
 
 class Usuario(AbstractUser):
     cambio_password_pendiente = models.BooleanField(default=True)
+    empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE, null=True, blank=True)
 
 class UserTheme(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="theme")
