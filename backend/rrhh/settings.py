@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'apps.empresas',
     'apps.suscripciones'
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

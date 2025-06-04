@@ -17,10 +17,10 @@ python manage.py migrate --noinput
 
 echo "🏢 Verificando empresa por defecto..."
 python manage.py shell << END
-from app.models import Empresa  # Asegúrate de usar el nombre correcto de tu app
+from apps.empresas.models import Empresa  # Asegúrate de usar el nombre correcto de tu app
 Empresa.objects.get_or_create(
     id=1,
-    defaults={"nombre": "Empresa Base", 'pais': 'BOL'}  # Ajusta campos según tu modelo Empresa
+    defaults={"nombre": "Empresa Base", 'pais': 'BOL', "telefono": '64437474'}  # Ajusta campos según tu modelo Empresa
 )
 END
 

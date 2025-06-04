@@ -10,6 +10,5 @@ router.register(r'planes', PlanViewSet, basename='plan')
 router.register(r'suscripciones', SuscripcionViewSet, basename='suscripcion')
 router.register(r'planes-privilegios', PlanesPrivilegiosViewSet, basename='planes-privilegios')
 
-urlpatterns = [
-    path('api/', include(router.urls)),
-]
+urlpatterns = router.urls
+

@@ -4,7 +4,7 @@ from apps.empresas.models import Empresa
 
 class Usuario(AbstractUser):
     cambio_password_pendiente = models.BooleanField(default=True)
-    empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)
+    empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE, null=True, blank=True)
     
 class Usuario_rol(models.Model):
     usuario=models.ForeignKey(Usuario,on_delete=models.CASCADE)

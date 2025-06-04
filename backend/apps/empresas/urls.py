@@ -7,6 +7,4 @@ router = DefaultRouter()
 # Empresa
 router.register(r'empresas', EmpresaViewSet, basename='empresa')
 
-urlpatterns = [
-    path('api/', include(router.urls)),
-]
+urlpatterns = router.urls

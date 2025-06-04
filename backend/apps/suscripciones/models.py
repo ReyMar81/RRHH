@@ -37,11 +37,11 @@ class Suscripcion(models.Model):
                 self.fecha_Fin = self.fecha_Inicio + relativedelta(years=cantidad)
         super().save(*args, **kwargs)
         
-    class Planes_Privilegios(models.Model):
-        plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
-        privilegio = models.ForeignKey(Permission, on_delete=models.CASCADE)
-        creat_at = models.DateTimeField(auto_now_add=True)
+class Planes_Privilegios(models.Model):
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    privilegio = models.ForeignKey(Permission, on_delete=models.CASCADE)
+    creat_at = models.DateTimeField(auto_now_add=True)
 
-        class Meta:
-            unique_together = ('plan', 'privilegio')
+    class Meta:
+        unique_together = ('plan', 'privilegio')
 
