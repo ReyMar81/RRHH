@@ -1,5 +1,6 @@
 from django.db import models
-from datetime import timedelta, timezone
+from datetime import timedelta
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from apps.empresas.models import Empresa
 from django.contrib.auth.models import Permission
