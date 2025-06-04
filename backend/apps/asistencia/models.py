@@ -19,8 +19,6 @@ class Asistencia(models.Model):
         related_name='asistencias'
     )
     empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)
-    
-    
 
     class Meta:
         unique_together = ('fecha', 'empleado')

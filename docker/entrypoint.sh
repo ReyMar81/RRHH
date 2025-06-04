@@ -15,15 +15,6 @@ python manage.py makemigrations
 echo "🔄 Ejecutando migrate..."
 python manage.py migrate --noinput
 
-echo "🏢 Verificando empresa por defecto..."
-python manage.py shell << END
-from apps.empresas.models import Empresa  # Asegúrate de usar el nombre correcto de tu app
-Empresa.objects.get_or_create(
-    id=1,
-    defaults={"nombre": "Empresa Base", 'pais': 'BOL', "telefono": '64437474'}  # Ajusta campos según tu modelo Empresa
-)
-END
-
 # Crear superusuario automáticamente si no existe
 if ! python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='${DJANGO_SUPERUSER_USERNAME}').exists())" | grep -q True; then
   echo "🛠️ Creando superusuario..."
@@ -43,4 +34,3 @@ fi
 # Iniciar el servidor de Django
 echo "🚀 Iniciando Django..."
 python manage.py runserver 0.0.0.0:8000
-
