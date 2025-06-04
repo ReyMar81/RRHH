@@ -18,6 +18,7 @@ class Cargo(models.Model):
     receso_diario = models.DecimalField(max_digits=4, decimal_places=2, default=0)
     horario_inicio = models.TimeField()
     horario_fin = models.TimeField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
     cargo_padre = ForeignKey(
         'self',
         on_delete=models.SET_NULL,

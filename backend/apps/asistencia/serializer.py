@@ -10,6 +10,5 @@ class AsistenciaSerializer(serializers.ModelSerializer):
         exclude=['empresa']
         read_only_fields = ['fecha', 'hora_entrada', 'hora_salida', 'horas_trabajadas']
        
-
     def get_nombre_empleado(self, obj):
         return f"{obj.empleado.nombre} {obj.empleado.apellidos}"

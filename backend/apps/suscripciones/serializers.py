@@ -11,6 +11,7 @@ class SuscripcionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suscripcion
         fields = '__all__'
+        read_only_fields = ('fecha_Fin',) 
 
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,4 +27,4 @@ class PlanesPrivilegiosSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Planes_Privilegios
-        fields = ['id', 'plan', 'privilegio', 'privilegio_id', 'creat_at']
+        fields = ['id', 'plan', 'privilegio', 'privilegio_id', 'fecha_creacion']

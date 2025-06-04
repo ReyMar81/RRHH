@@ -9,4 +9,4 @@ from .serializers import EmpresaSerializer
 class EmpresaViewSet(viewsets.ModelViewSet):
     queryset = Empresa.objects.all()
     serializer_class = EmpresaSerializer
-    permission_classes = [IsAuthenticated]  # Solo admins pueden acceder cambiar a admin
+    permission_classes = [IsAuthenticated, IsAdminUser]

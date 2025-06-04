@@ -16,15 +16,15 @@ class Plan(models.Model):
     tipo_de_duracion=models.CharField(max_length=1,choices=duracion_choise)
     cantidad_duracion=models.CharField(max_length=3)
     precio=models.PositiveSmallIntegerField()
-    creat_at=models.DateTimeField(auto_now_add=True)
+    fecha_creacion=models.DateTimeField(auto_now_add=True)
     
 class Suscripcion(models.Model):
     estado=models.BooleanField(default=True)
-    fecha_Inicio=models.DateField(auto_now_add=True)
-    fecha_Fin=models.DateField(blank=True,default=True)
+    fecha_Inicio=models.DatetField(auto_now_add=True)
+    fecha_Fin=models.DateField(blank=True,null=True)
     plan=models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
     empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)
-    creat_at=models.DateTimeField(auto_now_add=True)
+    fecha_creacion=models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
         if self.plan:
@@ -40,7 +40,7 @@ class Suscripcion(models.Model):
 class Planes_Privilegios(models.Model):
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     privilegio = models.ForeignKey(Permission, on_delete=models.CASCADE)
-    creat_at = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('plan', 'privilegio')

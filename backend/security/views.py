@@ -5,9 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from security.serializers import CustomTokenObtainPairSerializer
-from .models import UserTheme, Usuario
-from .serializers import UserThemeSerializer
-
+from security.models import UserTheme
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
