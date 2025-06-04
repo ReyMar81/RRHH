@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'drf_spectacular',
+    "auditlog",
     #Apps Propias   
     'apps.empleado',
     'apps.documento',
@@ -55,7 +56,8 @@ INSTALLED_APPS = [
     'apps.tipo',
     'apps.categoria',
     'apps.empresas',
-    'apps.suscripciones'
+    'apps.suscripciones',
+    'apps.bitacora',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
