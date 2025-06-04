@@ -6,13 +6,20 @@ class EmpleadoSerializers(serializers.ModelSerializer):
     cargo = serializers.SerializerMethodField()
     class Meta:
         model = Empleado
-        fields = '__all__'
+        exclude = ['empresa']
         read_only_fields = ['user_id']
 
     def get_cargo(self, obj):
+        
+        request = self.context.get('request')
+        if not request:
+            return None
+    
         contrato = Contrato.objects.select_related(
             'cargo_departamento', 'cargo_departamento__id_cargo'
-        ).filter(empleado=obj, estado='ACTIVO').first()
+        ).filter(empleado=obj,
+                 estado='ACTIVO',
+                 empresa=request.user.empresa).first()
         
         if contrato and contrato.cargo_departamento and contrato.cargo_departamento.id_cargo:
             return contrato.cargo_departamento.id_cargo.nombre

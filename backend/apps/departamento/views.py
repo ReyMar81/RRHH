@@ -13,15 +13,20 @@ from datetime import date
 
 class DepartamentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Departamento.objects.all()
     serializer_class = DepartamentoSerializers
+    
+    def get_queryset(self):
+        return Departamento.objects.filter(empresa=self.request.user.empresa)
+    
+    def perform_create(self, serializer):
+        serializer.save(empresa=self.request.user.empresa)
 
 class CargosPorDepartamentoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
         try:
-            departamento = Departamento.objects.get(pk=id)
+            departamento = Departamento.objects.get(pk=id,empresa=request.user.empresa) ##!AUMENTE ESTO
             relaciones = CargoDepartamento.objects.select_related('id_cargo').filter(id_departamento=departamento)
             cargos = [rel.id_cargo for rel in relaciones]
             serializer = SubCargosSerializer(cargos, many=True)
@@ -34,7 +39,7 @@ class EmpleadosActivosPorDepartamentoView(APIView):
 
     def get(self, request, id):
         try:
-            departamento = Departamento.objects.get(pk=id)
+            departamento = Departamento.objects.get(pk=id,empresa=request.user.empresa) ##!Aumente esto
             relaciones = CargoDepartamento.objects.filter(id_departamento=departamento)
             
             contratos = Contrato.objects.select_related(

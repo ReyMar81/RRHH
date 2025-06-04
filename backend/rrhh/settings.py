@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'apps.contrato',
     'apps.tipo',
     'apps.categoria',
+    'apps.empresas',
+    'apps.suscripciones'
 ]
 
 MIDDLEWARE = [

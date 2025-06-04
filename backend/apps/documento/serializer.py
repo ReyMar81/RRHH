@@ -4,4 +4,4 @@ from .models import Documento
 class DocumentoSerializers(serializers.ModelSerializer):
     class Meta:
         model = Documento
-        fields = '__all__'
+        exclude = ['empresa']

@@ -6,7 +6,7 @@ from apps.contrato.models import Contrato
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
-        fields = '__all__'
+        exclude = ['empresa']
 
     def create(self, validated_data):
         # Si no se proporciona salario personalizado, usar el del cargo asociado

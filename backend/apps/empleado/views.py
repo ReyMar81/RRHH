@@ -12,8 +12,15 @@ from drf_spectacular.utils import extend_schema
 
 class EmpleadoViewSets(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializers
+    
+    def get_queryset(self):
+        return Empleado.objects.filter(empresa=self.request.user.empresa)
+
+    def perform_create(self, serializer):
+        serializer.save(empresa=self.request.user.empresa)
+
+    
     @action(detail=False, methods=['get'], url_path='actual')
     def actual(self, request):
         empleado = Empleado.objects.filter(user_id=request.user).first()
@@ -22,6 +29,7 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
     
         serializer = self.get_serializer(empleado)
         return Response(serializer.data)
+    
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

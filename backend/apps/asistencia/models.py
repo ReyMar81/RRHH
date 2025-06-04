@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.empleado.models import Empleado
+from apps.empresas.models import Empresa
 
 
 # Create your models here.
@@ -17,6 +18,9 @@ class Asistencia(models.Model):
         on_delete=models.PROTECT,
         related_name='asistencias'
     )
+    empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)
+    
+    
 
     class Meta:
         unique_together = ('fecha', 'empleado')

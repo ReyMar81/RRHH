@@ -3,7 +3,7 @@ from django.urls import path
 from .views import DepartamentoViewSet, CargosPorDepartamentoView, EmpleadosActivosPorDepartamentoView
 
 router = DefaultRouter()
-router.register(r'departamentos', DepartamentoViewSet)
+router.register(r'departamentos', DepartamentoViewSet,basename='departamentos')
 
 urlpatterns = router.urls + [
     path('departamentos/<int:id>/cargos/', CargosPorDepartamentoView.as_view(), name='departamento-cargos'),

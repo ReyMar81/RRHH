@@ -10,12 +10,18 @@ from apps.empleado.models import Empleado
 class DocumentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = DocumentoSerializers
-    queryset = Documento.objects.all()
+    
+    def get_queryset(self):
+        return Documento.objects.filter(empresa=self.request.user.empresa)
+    
+    def perform_create(self, serializer):
+        serializer.save(empresa=self.request.user.empresa)
+
 
     @action(detail=False, methods=['get'], url_path='mios')
     def mis_documentos(self, request):
         try:
-            empleado = Empleado.objects.filter(user_id=request.user).first()
+            empleado = Empleado.objects.filter(user_id=request.user,empresa=request.user.empresa).first()
             if not empleado:
                 return Response({'error': 'Empleado no encontrado'}, status=404)
 

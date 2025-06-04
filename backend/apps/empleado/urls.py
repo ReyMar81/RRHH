@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import CambiarPasswordEmpleadoView, EmpleadoViewSets
 
 router = DefaultRouter()
-router.register(r'empleados', EmpleadoViewSets)
+router.register(r'empleados', EmpleadoViewSets, basename='empleado')
 
 urlpatterns = [
     path('', include(router.urls)),
