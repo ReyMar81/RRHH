@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from apps.empresas.models import Empresa
 from security.models import Usuario
+from apps.suscripciones.models import Plan, Suscripcion
 
 def crear_empresa_con_admin(data):
     nombre_empresa = data['nombre']
@@ -25,6 +26,15 @@ def crear_empresa_con_admin(data):
         empresa=empresa,
         is_staff=True
     )
+
+    # Asignar suscripción según plan_id o prueba por defecto
+    plan = data.get('plan_id')
+    if plan:
+        Suscripcion.objects.create(empresa=empresa, plan=plan)
+    else:
+        plan_trial = Plan.objects.filter(nombre__icontains='prueba').first()
+        if plan_trial:
+            Suscripcion.objects.create(empresa=empresa, plan=plan_trial)
 
     # Enviar email con credenciales
     send_mail(

@@ -5,7 +5,7 @@ from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from .models import Empleado
 
-def crear_empleado_con_usuario(data):
+def crear_empleado_con_usuario(data, empresa=None):
     ci = data['ci']
     apellidos = data['apellidos']
     username = f"{ci}.{iniciales(apellidos)}"
@@ -20,7 +20,11 @@ def crear_empleado_con_usuario(data):
         last_name=apellidos,
     )
 
-    empleado = Empleado.objects.create(user_id=user, **data)
+    empleado_data = data.copy()
+    if empresa is not None:
+        empleado_data['empresa'] = empresa
+
+    empleado = Empleado.objects.create(user_id=user, **empleado_data)
 
     if empleado.correo_personal:
         send_mail(

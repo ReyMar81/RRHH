@@ -20,7 +20,7 @@ class EmpresaRegistroView(APIView):
     @extend_schema(
         request=EmpresaRegistroSerializer,
         responses={201: EmpresaSerializer},
-        description="Registro público de empresa y envío de credenciales al email del admin."
+        description="Registro público de empresa y envío de credenciales al email del admin. Debe incluir el campo plan_id si se desea un plan específico."
     )
     def post(self, request):
         serializer = EmpresaRegistroSerializer(data=request.data)
@@ -31,6 +31,7 @@ class EmpresaRegistroView(APIView):
                 'admin_username': user.username,
                 'admin_email': user.email,
                 'password': password,
+                'plan_id': request.data.get('plan_id', None),
                 'mensaje': 'Empresa registrada y credenciales enviadas al email.'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
