@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import timedelta
+from datetime import timedelta, timezone
 from dateutil.relativedelta import relativedelta
 from apps.empresas.models import Empresa
 from django.contrib.auth.models import Permission
@@ -20,13 +20,15 @@ class Plan(models.Model):
     
 class Suscripcion(models.Model):
     estado=models.BooleanField(default=True)
-    fecha_Inicio=models.DatetField(auto_now_add=True)
+    fecha_Inicio=models.DateField(auto_now_add=True)
     fecha_Fin=models.DateField(blank=True,null=True)
     plan=models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
     empresa=models.ForeignKey(Empresa,on_delete=models.CASCADE)
     fecha_creacion=models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
+        if not self.fecha_Inicio:
+            self.fecha_Inicio = timezone.now().date()
         if self.plan:
             cantidad = int(self.plan.cantidad_duracion)
             if self.plan.tipo_de_duracion == 'd':
