@@ -47,7 +47,7 @@ function Login() {
                             type="text"
                             id="username"
                             name="username"
-                            className="form-control"
+                            className="form-control text-black"
                             placeholder="Ingrese su usuario"
                             value={formData.username}
                             onChange={handleChange}
@@ -62,7 +62,7 @@ function Login() {
                             type="password"
                             id="password"
                             name="password"
-                            className="form-control"
+                            className="form-control text-black"
                             placeholder="Ingrese su contraseña"
                             value={formData.password}
                             onChange={handleChange}
