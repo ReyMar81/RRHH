@@ -8,8 +8,8 @@ class Usuario(AbstractUser):
 
 class UserTheme(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="theme")
-    color_text = models.CharField(max_length=7, default="#ffffff")  # Color del texto
-    color1 = models.CharField(max_length=7, default="#150546")  # Color principal
+    color_text = models.CharField(max_length=7, default="#8A8585")  # Color del texto
+    color1 = models.CharField(max_length=7, default="#0040FF")  # Color principal
     color2 = models.CharField(max_length=7, default="#ffffff")  # Color secundario
     font_size = models.CharField(max_length=10, default="16px")  # Tamaño de fuente
     font_family = models.CharField(max_length=100, default="Arial, sans-serif")  # Fuente
