@@ -36,7 +36,7 @@ function Login() {
     return (
         <div className="login-container d-flex justify-content-center align-items-center min-vh-100">
             <div className="login-card card p-4 shadow-lg">
-                <h3 className="text-center mb-4 ">Bienvenido</h3>
+                <h3 className="text-center mb-4 ">Bienvenido a HRM System</h3>
                 <form onSubmit={handleSubmit}>
                     {/* Mostrar mensaje de error */}
                     {error && <div className="alert alert-danger">{error}</div>}

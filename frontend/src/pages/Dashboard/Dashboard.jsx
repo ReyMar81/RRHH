@@ -22,7 +22,7 @@ const Dashboard = () => {
             {/* Sidebar */}
             <nav className="sidebar">
                 <div className="sidebar-header p-3 d-flex justify-content-between align-items-center">
-                    <h5 className="m-0">RRHH</h5>
+                    <h5 className="m-0 text-white">RRHH</h5>
                     <button
                         className="btn btn-sm btn-light d-md-none"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

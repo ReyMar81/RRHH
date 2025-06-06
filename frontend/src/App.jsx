@@ -1,4 +1,4 @@
-import { Routes, HashRouter as Router, Route, Navigate } from 'react-router-dom';
+import { Routes, HashRouter as Router, Route } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Departamentos from './pages/Departamentos/Departamentos';
@@ -11,15 +11,23 @@ import Categorias from './pages/Documentos/Categorias';
 import Tipos from './pages/Documentos/Tipos';
 import CargosDepartamentos from './pages/Departamentos/CargosDepartamentos';
 import Perfil from './pages/Perfil/Perfil';
-import { ThemeProvider } from 'react-bootstrap';
+import { ThemeProvider } from './themes/ThemeContext';
+import LandingPage from './pages/LandingPage/LandingPage';
 
 function App() {
   return (
-    <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />}>
+          <Route path="/" element={<LandingPage />} />
+          
+          <Route
+            path="/dashboard/*"
+            element={
+              <ThemeProvider>
+                <Dashboard />
+              </ThemeProvider>
+            }
+          >
             <Route path="departamentos" element={<Departamentos />} />
             <Route path="empleados" element={<Empleados />} />
             <Route path="documentos" element={<Documentos />} />
@@ -31,9 +39,16 @@ function App() {
             <Route path="cargos_departamentos" element={<CargosDepartamentos />} />
             <Route path="perfil" element={<Perfil />} />
           </Route>
+          <Route
+            path="/login"
+            element={
+              <ThemeProvider>
+                <Login />
+              </ThemeProvider>
+            }
+          />
         </Routes>
       </Router>
-    </ThemeProvider>
   );
 }
 
