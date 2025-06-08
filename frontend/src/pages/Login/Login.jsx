@@ -25,6 +25,15 @@ function Login() {
             // Guardar los tokens en el almacenamiento local
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
+
+            // Obtener el id de la empresa y guardarlo
+            const empresaResponse = await axios.get(`${Apiurl}empresas/`, {
+                headers: {
+                    Authorization: `Bearer ${response.data.access}`,
+                },
+            });
+            localStorage.setItem('empresa_id', empresaResponse.data[0].id); // Suponiendo que el usuario tiene acceso a una empresa
+
             // Redirigir al dashboard
             navigate('/dashboard');
         } catch (error) {

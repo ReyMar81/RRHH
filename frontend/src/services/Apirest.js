@@ -11,15 +11,14 @@ export const refreshAccessToken = async () => {
     try {
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) {
-            console.error("No refresh token found");
-            return null; // No eliminar tokens aquí
+            console.error("No se encontró el token de renovación");
+            return null;
         }
 
         const response = await axios.post(`${Apiurl}token/refresh/`, {
             refresh: refreshToken,
         });
 
-        // Guardar el nuevo access token en localStorage
         localStorage.setItem("access_token", response.data.access);
         return response.data.access;
     } catch (error) {
@@ -29,6 +28,13 @@ export const refreshAccessToken = async () => {
         window.location.href = "/";
         throw error;
     }
+};
+
+// Función para verificar si el token ha expirado
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp * 1000 < Date.now();
 };
 
 // Interceptor para manejar el token
@@ -51,12 +57,5 @@ apiClient.interceptors.request.use(
     },
     (error) => Promise.reject(error)
 );
-
-// Función para verificar si el token ha expirado
-const isTokenExpired = (token) => {
-    if (!token) return true;
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.exp * 1000 < Date.now();
-};
 
 export default apiClient;

@@ -26,50 +26,53 @@ const Documentos = () => {
 
     const navigate = useNavigate();
 
-    // Obtener documentos
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener documentos desde el backend
     const fetchDocumentos = async () => {
         try {
-            const response = await apiClient.get("documentos/");
+            const response = await apiClient.get(`documentos/?empresa_id=${empresaId}`);
             setDocumentos(response.data);
         } catch (error) {
             console.error("Error al obtener documentos:", error);
         }
     };
 
-    // Obtener tipos
+    // Obtener tipos desde el backend
     const fetchTipos = async () => {
         try {
-            const response = await apiClient.get("tipos/");
+            const response = await apiClient.get(`tipos/?empresa_id=${empresaId}`);
             setTipos(response.data);
         } catch (error) {
             console.error("Error al obtener tipos:", error);
         }
     };
 
-    // Obtener categorías
+    // Obtener categorías desde el backend
     const fetchCategorias = async () => {
         try {
-            const response = await apiClient.get("categorias/");
+            const response = await apiClient.get(`categorias/?empresa_id=${empresaId}`);
             setCategorias(response.data);
         } catch (error) {
             console.error("Error al obtener categorías:", error);
         }
     };
 
-    // Obtener empleados
+    // Obtener empleados desde el backend
     const fetchEmpleados = async () => {
         try {
-            const response = await apiClient.get("empleados/");
+            const response = await apiClient.get(`empleados/?empresa_id=${empresaId}`);
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
         }
     };
 
-    // Obtener contratos
+    // Obtener contratos desde el backend
     const fetchContratos = async () => {
         try {
-            const response = await apiClient.get("contratos/");
+            const response = await apiClient.get(`contratos/?empresa_id=${empresaId}`);
             setContratos(response.data);
         } catch (error) {
             console.error("Error al obtener contratos:", error);
@@ -125,6 +128,7 @@ const Documentos = () => {
             const payload = {
                 ...formData,
                 url: fileUrl || formData.url, // Usar la URL existente si se está editando
+                empresa_id: empresaId, // Asociar el documento a la empresa
             };
 
             if (isEditing) {

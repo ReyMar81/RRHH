@@ -15,10 +15,13 @@ const Departamentos = () => {
 
     const navigate = useNavigate();
 
-    // Obtener departamentos
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener departamentos desde el backend
     const fetchDepartamentos = async () => {
         try {
-            const response = await apiClient.get("departamentos/");
+            const response = await apiClient.get(`departamentos/?empresa_id=${empresaId}`);
             setDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener departamentos:", error);
@@ -31,23 +34,28 @@ const Departamentos = () => {
         const payload = {
             nombre: formData.nombre,
             descripcion: formData.descripcion,
+            empresa_id: empresaId, // Asociar el departamento a la empresa
         };
 
-        if (isEditing) {
-            await apiClient.put(`departamentos/${editId}/`, payload);
-        } else {
-            await apiClient.post("departamentos/", payload);
-        }
+        try {
+            if (isEditing) {
+                await apiClient.put(`departamentos/${editId}/`, payload);
+            } else {
+                await apiClient.post("departamentos/", payload);
+            }
 
-        fetchDepartamentos();
-        resetForm();
-        setShowModal(false);
+            fetchDepartamentos();
+            resetForm();
+            setShowModal(false);
+        } catch (error) {
+            console.error("Error al guardar el departamento:", error);
+        }
     };
 
     // Eliminar departamento
     const deleteDepartamento = async (id) => {
         try {
-            await apiClient.delete(`departamentos/${id}/`);
+            await apiClient.delete(`departamentos/${id}/?empresa_id=${empresaId}`);
             fetchDepartamentos();
         } catch (error) {
             console.error("Error al eliminar departamento:", error);

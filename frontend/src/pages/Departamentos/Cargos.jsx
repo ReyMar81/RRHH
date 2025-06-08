@@ -20,10 +20,13 @@ const Cargos = () => {
 
     const navigate = useNavigate(); // Hook para redirigir
 
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
     // Obtener cargos desde el backend
     const fetchCargos = async () => {
         try {
-            const response = await apiClient.get("cargos/");
+            const response = await apiClient.get(`cargos/?empresa_id=${empresaId}`);
             setCargos(response.data);
         } catch (error) {
             console.error("Error al obtener los cargos:", error);
@@ -42,6 +45,7 @@ const Cargos = () => {
         const dataToSend = {
             ...formData,
             cargo_padre: formData.cargo_padre || null,
+            empresa_id: empresaId, // Asociar el cargo a la empresa
         };
 
         try {
@@ -63,7 +67,7 @@ const Cargos = () => {
     const handleDelete = async () => {
         if (window.confirm("¿Estás seguro de eliminar este cargo?")) {
             try {
-                await apiClient.delete(`cargos/${formData.id}/`);
+                await apiClient.delete(`cargos/${formData.id}/?empresa_id=${empresaId}`);
                 fetchCargos();
                 setShowModal(false);
             } catch (error) {
@@ -109,7 +113,7 @@ const Cargos = () => {
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Gestión de Cargos</h1>
-            <Button  onClick={() => { resetForm(); setShowModal(true); }}>
+            <Button onClick={() => { resetForm(); setShowModal(true); }}>
                 Crear Cargo
             </Button>
             <Button

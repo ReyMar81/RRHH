@@ -6,10 +6,15 @@ const Asistencia = () => {
     const [asistencias, setAsistencias] = useState([]);
     const [datosCargados, setDatosCargados] = useState(false);
 
-    // Obtener asistencias desde el backend (nuevo endpoint)
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener asistencias desde el backend
     const fetchAsistencias = async () => {
         try {
-            const response = await apiClient.get("asistencia/asistencias/");
+            const response = await apiClient.get(
+                `asistencia/asistencias/?empresa_id=${empresaId}`
+            );
             setAsistencias(response.data);
         } catch (error) {
             console.error("Error al obtener asistencias:", error);

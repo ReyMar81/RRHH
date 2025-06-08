@@ -13,10 +13,13 @@ const Categoria = () => {
     const [editId, setEditId] = useState(null);
     const [message, setMessage] = useState("");
 
-    // Obtener categorías
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener categorías desde el backend
     const fetchCategorias = async () => {
         try {
-            const response = await apiClient.get("categorias/");
+            const response = await apiClient.get(`categorias/?empresa_id=${empresaId}`);
             setCategorias(response.data);
         } catch (error) {
             console.error("Error al obtener categorías:", error);
@@ -26,12 +29,18 @@ const Categoria = () => {
     // Crear o editar categoría
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const payload = {
+            nombre: formData.nombre,
+            descripcion: formData.descripcion,
+            empresa_id: empresaId, // Asociar la categoría a la empresa
+        };
+
         try {
             if (isEditing) {
-                await apiClient.put(`categorias/${editId}/`, formData);
+                await apiClient.put(`categorias/${editId}/`, payload);
                 setMessage("Categoría actualizada con éxito.");
             } else {
-                await apiClient.post("categorias/", formData);
+                await apiClient.post("categorias/", payload);
                 setMessage("Categoría creada con éxito.");
             }
             fetchCategorias();
@@ -47,7 +56,7 @@ const Categoria = () => {
     const deleteCategoria = async (id) => {
         if (window.confirm("¿Estás seguro de eliminar esta categoría?")) {
             try {
-                await apiClient.delete(`categorias/${id}/`);
+                await apiClient.delete(`categorias/${id}/?empresa_id=${empresaId}`);
                 fetchCategorias();
                 setMessage("Categoría eliminada con éxito.");
                 setShowModal(false);

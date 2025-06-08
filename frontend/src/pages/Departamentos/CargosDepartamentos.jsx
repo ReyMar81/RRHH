@@ -14,28 +14,33 @@ const CargosDepartamentos = () => {
         id_departamento: "",
     });
 
-    // Obtener datos del backend
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener relaciones cargos-departamentos desde el backend
     const fetchCargosDepartamentos = async () => {
         try {
-            const response = await apiClient.get("cargos_departamentos/");
+            const response = await apiClient.get(`cargos_departamentos/?empresa_id=${empresaId}`);
             setCargosDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener los cargos-departamentos:", error);
         }
     };
 
+    // Obtener cargos desde el backend
     const fetchCargos = async () => {
         try {
-            const response = await apiClient.get("cargos/");
+            const response = await apiClient.get(`cargos/?empresa_id=${empresaId}`);
             setCargos(response.data);
         } catch (error) {
             console.error("Error al obtener los cargos:", error);
         }
     };
 
+    // Obtener departamentos desde el backend
     const fetchDepartamentos = async () => {
         try {
-            const response = await apiClient.get("departamentos/");
+            const response = await apiClient.get(`departamentos/?empresa_id=${empresaId}`);
             setDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener los departamentos:", error);
@@ -48,14 +53,19 @@ const CargosDepartamentos = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Crear o actualizar un cargo-departamento
+    // Crear o actualizar una relación cargo-departamento
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const dataToSend = {
+            ...formData,
+            empresa_id: empresaId, // Asociar la relación a la empresa
+        };
+
         try {
             if (isEditing) {
-                await apiClient.put(`cargos_departamentos/${formData.id}/`, formData);
+                await apiClient.put(`cargos_departamentos/${formData.id}/`, dataToSend);
             } else {
-                await apiClient.post("cargos_departamentos/", formData);
+                await apiClient.post("cargos_departamentos/", dataToSend);
             }
             fetchCargosDepartamentos();
             setShowModal(false);
@@ -65,11 +75,11 @@ const CargosDepartamentos = () => {
         }
     };
 
-    // Eliminar un cargo-departamento
+    // Eliminar una relación cargo-departamento
     const handleDelete = async () => {
         if (window.confirm("¿Estás seguro de eliminar esta relación?")) {
             try {
-                await apiClient.delete(`cargos_departamentos/${formData.id}/`);
+                await apiClient.delete(`cargos_departamentos/${formData.id}/?empresa_id=${empresaId}`);
                 fetchCargosDepartamentos();
                 setShowModal(false);
                 resetForm();

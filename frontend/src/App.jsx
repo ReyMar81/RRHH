@@ -13,15 +13,18 @@ import CargosDepartamentos from './pages/Departamentos/CargosDepartamentos';
 import Perfil from './pages/Perfil/Perfil';
 import { ThemeProvider } from './themes/ThemeContext';
 import LandingPage from './pages/LandingPage/LandingPage';
+import Suscripciones from './pages/Suscripciones/Suscripciones';
+import Registro from './pages/Suscripciones/Registro';
 
 function App() {
   return (
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          
+          <Route path="/suscripciones/*" element={<Suscripciones />} />
+          <Route path="/registro" element={<Registro />} />
           <Route
-            path="/dashboard/*"
+            path="/dashboard"
             element={
               <ThemeProvider>
                 <Dashboard />

@@ -20,10 +20,13 @@ const Contratos = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
 
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
     // Obtener contratos
     const fetchContratos = async () => {
         try {
-            const response = await apiClient.get("contratos/");
+            const response = await apiClient.get(`contratos/?empresa_id=${empresaId}`);
             setContratos(response.data);
         } catch (error) {
             console.error("Error al obtener contratos:", error);
@@ -33,7 +36,7 @@ const Contratos = () => {
     // Obtener empleados
     const fetchEmpleados = async () => {
         try {
-            const response = await apiClient.get("empleados/");
+            const response = await apiClient.get(`empleados/?empresa_id=${empresaId}`);
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
@@ -43,7 +46,7 @@ const Contratos = () => {
     // Obtener cargos
     const fetchCargos = async () => {
         try {
-            const response = await apiClient.get("cargos/");
+            const response = await apiClient.get(`cargos/?empresa_id=${empresaId}`);
             setCargos(response.data);
         } catch (error) {
             console.error("Error al obtener cargos:", error);
@@ -86,6 +89,7 @@ const Contratos = () => {
                 ...formData,
                 fecha_fin: formData.fecha_fin || null, // Enviar null si fecha_fin está vacío
                 salario_personalizado: salarioFinal,
+                empresa_id: empresaId, // Asociar el contrato a la empresa
             };
 
             if (isEditing) {
@@ -106,7 +110,7 @@ const Contratos = () => {
     const deleteContrato = async (id) => {
         if (window.confirm("¿Estás seguro de eliminar este contrato?")) {
             try {
-                await apiClient.delete(`contratos/${id}/`);
+                await apiClient.delete(`contratos/${id}/?empresa_id=${empresaId}`);
                 fetchContratos();
             } catch (error) {
                 console.error("Error al eliminar contrato:", error);

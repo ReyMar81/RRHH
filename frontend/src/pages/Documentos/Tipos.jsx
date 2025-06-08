@@ -15,10 +15,13 @@ const Tipos = () => {
     const [editId, setEditId] = useState(null);
     const [message, setMessage] = useState("");
 
-    // Obtener tipos
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
+    // Obtener tipos desde el backend
     const fetchTipos = async () => {
         try {
-            const response = await apiClient.get("tipos/");
+            const response = await apiClient.get(`tipos/?empresa_id=${empresaId}`);
             setTipos(response.data);
         } catch (error) {
             console.error("Error al obtener tipos:", error);
@@ -28,12 +31,17 @@ const Tipos = () => {
     // Crear o editar tipo
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const payload = {
+            ...formData,
+            empresa_id: empresaId, // Asociar el tipo a la empresa
+        };
+
         try {
             if (isEditing) {
-                await apiClient.put(`tipos/${editId}/`, formData);
+                await apiClient.put(`tipos/${editId}/`, payload);
                 setMessage("Tipo actualizado con éxito.");
             } else {
-                await apiClient.post("tipos/", formData);
+                await apiClient.post("tipos/", payload);
                 setMessage("Tipo creado con éxito.");
             }
             fetchTipos();
@@ -49,7 +57,7 @@ const Tipos = () => {
     const deleteTipo = async (id) => {
         if (window.confirm("¿Estás seguro de eliminar este tipo?")) {
             try {
-                await apiClient.delete(`tipos/${id}/`);
+                await apiClient.delete(`tipos/${id}/?empresa_id=${empresaId}`);
                 fetchTipos();
                 setMessage("Tipo eliminado con éxito.");
                 setShowModal(false);
@@ -90,7 +98,7 @@ const Tipos = () => {
         <div className="container mt-4">
             <h1 className="mb-4 ">Gestión de Tipos</h1>
             <div className="d-flex justify-content-between mb-3">
-                <Button  onClick={() => setShowModal(true)}>
+                <Button onClick={() => setShowModal(true)}>
                     Crear Tipo
                 </Button>
             </div>

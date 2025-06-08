@@ -35,10 +35,13 @@ const Empleados = () => {
         { value: "V", label: "Viudo/a" },
     ];
 
+    // Obtener el id de la empresa desde localStorage
+    const empresaId = localStorage.getItem("empresa_id");
+
     // Obtener empleados
     const fetchEmpleados = async () => {
         try {
-            const response = await apiClient.get("empleados/");
+            const response = await apiClient.get(`empleados/?empresa_id=${empresaId}`);
             setEmpleados(response.data);
         } catch (error) {
             console.error("Error al obtener empleados:", error);
@@ -48,7 +51,7 @@ const Empleados = () => {
     // Obtener departamentos
     const fetchDepartamentos = async () => {
         try {
-            const response = await apiClient.get("departamentos/");
+            const response = await apiClient.get(`departamentos/?empresa_id=${empresaId}`);
             setDepartamentos(response.data);
         } catch (error) {
             console.error("Error al obtener departamentos:", error);
@@ -58,7 +61,7 @@ const Empleados = () => {
     // Obtener contratos
     const fetchContratos = async () => {
         try {
-            const response = await apiClient.get("contratos/");
+            const response = await apiClient.get(`contratos/?empresa_id=${empresaId}`);
             setContratos(response.data);
         } catch (error) {
             console.error("Error al obtener contratos:", error);
@@ -89,7 +92,7 @@ const Empleados = () => {
     // Crear empleado
     const createEmpleado = async () => {
         try {
-            await apiClient.post("empleados/", formData);
+            await apiClient.post("empleados/", { ...formData, empresa_id: empresaId });
             fetchEmpleados();
             resetForm();
             setShowModal(false);
@@ -101,7 +104,7 @@ const Empleados = () => {
     // Editar empleado
     const updateEmpleado = async () => {
         try {
-            await apiClient.put(`empleados/${editId}/`, formData);
+            await apiClient.put(`empleados/${editId}/`, { ...formData, empresa_id: empresaId });
             fetchEmpleados();
             resetForm();
             setIsEditing(false);
@@ -115,7 +118,7 @@ const Empleados = () => {
     // Eliminar empleado
     const deleteEmpleado = async (id) => {
         try {
-            await apiClient.delete(`empleados/${id}/`);
+            await apiClient.delete(`empleados/${id}/?empresa_id=${empresaId}`);
             fetchEmpleados();
         } catch (error) {
             console.error("Error al eliminar empleado:", error);

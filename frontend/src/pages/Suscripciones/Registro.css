@@ -1,0 +1,31 @@
+/* Estilos personalizados para el registro */
+.registro-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.registro-title {
+    color: #0e6efd;
+    font-weight: bold;
+}
+
+.registro-form {
+    max-width: 600px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.registro-button {
+    background-color: #0e6efd;
+    border-color: #0e6efd;
+    font-weight: bold;
+}
+
+.registro-button:hover {
+    background-color: #0c5cd6;
+    border-color: #0c5cd6;
+}

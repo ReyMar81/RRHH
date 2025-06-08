@@ -22,7 +22,7 @@ const LandingPage = () => {
                     </button>
                     <button
                         className="btn btn-outline-secondary btn-lg shadow"
-                        onClick={() => alert('Cotización solicitada')}
+                        onClick={() => navigate('/suscripciones')}
                     >
                         Suscribete
                     </button>
