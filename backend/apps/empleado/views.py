@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import xlsxwriter
+from django.db import models
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter, landscape, legal
 from reportlab.pdfgen import canvas
@@ -12,7 +13,10 @@ from rest_framework.permissions import IsAuthenticated
 from .service import cambiar_password_con_validacion, crear_empleado_con_usuario
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
+from ..contrato.models import TIPOS_CONTRATO
+
 
 # Create your views here.
 
@@ -73,18 +77,52 @@ class CambiarPasswordEmpleadoView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+PARAMETROS = [
+    ('genero', str, 'Género del empleado (por ejemplo: M o F)'),
+    ('estado_civil', str, 'Estado civil del empleado'),
+    ('fecha_ingreso_inicio', str, 'Fecha de ingreso inicial (YYYY-MM-DD)'),
+    ('fecha_ingreso_fin', str, 'Fecha de ingreso final (YYYY-MM-DD)'),
+    ('departamento', int, 'ID del departamento'),
+    ('cargo', int, 'ID del cargo'),
+    ('tipo_contrato', str, 'Tipo de contrato (INDEFINIDO, PLAZO FIJO, MEDIO TIEMPO, PASANTIA)')
+]
+
 class ReporteEmpleadosExcelView(APIView):
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name=nombre, type=tipo, location=OpenApiParameter.QUERY, description=desc)
+            for nombre, tipo, desc in PARAMETROS
+        ],
+        responses={200: {'description': 'PDF con el reporte de empleados'}}
+    )
     def get(self, request, *args, **kwargs):
         empresa = request.user.empresa
+
+        empleados = self._get_empleados_filtrados(request, empresa)
+
+        # Crear archivo Excel
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_empleados.xlsx"'
+
+        wb = xlsxwriter.Workbook(response)
+
+        self._crear_hoja_reporte_empleados(wb, empresa, empleados)
+        self._crear_hoja_estadisticas(wb, empleados)
+
+        wb.close()
+        return response
+
+    def _get_empleados_filtrados(self, request, empresa):
         empleados = Empleado.objects.filter(empresa=empresa)
 
-        # Filtros
-        genero = request.GET.get('genero', None)
-        estado_civil = request.GET.get('estado_civil', None)
-        fecha_ingreso_inicio = request.GET.get('fecha_ingreso_inicio', None)
-        fecha_ingreso_fin = request.GET.get('fecha_ingreso_fin', None)
-        departamento_id = request.GET.get('departamento', None)
-        cargo_id = request.GET.get('cargo', None)
+        genero = request.GET.get('genero')
+        estado_civil = request.GET.get('estado_civil')
+        fecha_ingreso_inicio = request.GET.get('fecha_ingreso_inicio')
+        fecha_ingreso_fin = request.GET.get('fecha_ingreso_fin')
+        departamento_id = request.GET.get('departamento')
+        cargo_id = request.GET.get('cargo')
+        tipo_contrato = request.GET.get('tipo_contrato')
 
         if genero:
             empleados = empleados.filter(genero=genero)
@@ -96,12 +134,15 @@ class ReporteEmpleadosExcelView(APIView):
             empleados = empleados.filter(contratos__cargo_departamento__id_departamento=departamento_id)
         if cargo_id:
             empleados = empleados.filter(contratos__cargo_departamento__id_cargo=cargo_id)
+        if tipo_contrato:
+            empleados = empleados.filter(contratos__tipo_contrato=tipo_contrato)
 
-        # Crear archivo Excel
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename="reporte_empleados.xlsx"'
+        if tipo_contrato and tipo_contrato not in dict(TIPOS_CONTRATO):
+            return Response({'error': 'Tipo de contrato no válido'}, status=400)
 
-        wb = xlsxwriter.Workbook(response)
+        return empleados
+
+    def _crear_hoja_reporte_empleados(self, wb, empresa, empleados):
         ws = wb.add_worksheet("Reporte de Empleados")
 
         # Formatos
@@ -116,17 +157,17 @@ class ReporteEmpleadosExcelView(APIView):
         })
 
         # Fila 1: Empresa
-        ws.merge_range('A1:I1', f"Empresa: {empresa.nombre}", empresa_format)
+        ws.merge_range('A1:J1', f"Empresa: {empresa.nombre}", empresa_format)
 
         # Fila 2: Vacía
 
         # Fila 3: Título del reporte
-        ws.merge_range('A3:I3', "Reporte de Empleados", titulo_format)
+        ws.merge_range('A3:J3', "Reporte de Empleados", titulo_format)
 
         # Fila 4: Vacía
 
         # Fila 5: Encabezados
-        headers = ['ID', 'Nombre', 'Apellidos', 'C.I.', 'Género', 'Estado Civil', 'Fecha de Ingreso', 'Departamento', 'Cargo']
+        headers = ['ID', 'Nombre', 'Apellidos', 'C.I.', 'Género', 'Estado Civil', 'Fecha de Ingreso', 'Departamento', 'Cargo', 'Contrato']
         for col, header in enumerate(headers):
             ws.write(4, col, header, header_format)
 
@@ -144,6 +185,7 @@ class ReporteEmpleadosExcelView(APIView):
                 dict(estado_Civil_Choise).get(empleado.estado_civil, ""),
                 str(empleado.fecha_ingreso),
                 "",
+                "",
                 ""
             ]
 
@@ -151,6 +193,7 @@ class ReporteEmpleadosExcelView(APIView):
             if contrato and contrato.cargo_departamento:
                 data[7] = contrato.cargo_departamento.id_departamento.nombre
                 data[8] = contrato.cargo_departamento.id_cargo.nombre
+                data[9] = contrato.get_tipo_contrato_display()
 
             for col, value in enumerate(data):
                 ws.write(row, col, value)
@@ -162,11 +205,108 @@ class ReporteEmpleadosExcelView(APIView):
         for i, width in enumerate(column_widths):
             ws.set_column(i, i, width + 2)
 
-        wb.close()
-        return response
+    def _crear_hoja_estadisticas(self, wb, empleados):
+        ws = wb.add_worksheet("Estadísticas")
 
+        # Formatos
+        titulo_format = wb.add_format({
+            'bold': True, 'align': 'center', 'valign': 'vcenter', 'font_size': 14
+        })
+        seccion_format = wb.add_format({'bold': True})
+
+        ws.merge_range('A1:J1', "Reporte Estadístico", titulo_format)
+
+        max_len_col_a = len("Total de empleados")
+
+        # Total empleados
+        ws.write(2, 0, "Total de empleados", seccion_format)
+        ws.write(2, 1, empleados.count())
+
+        row = 4
+
+        # Tipo de contrato
+        ws.write(row, 0, "Tipo de contrato", seccion_format)
+        ws.write(row, 1, "Cantidad", seccion_format)
+        max_len_col_a = max(max_len_col_a, len("Tipo de contrato"))
+        row += 1
+
+        contratos = empleados.values('contratos__tipo_contrato').annotate(cantidad=models.Count('id'))
+        for item in contratos:
+            tipo = dict(TIPOS_CONTRATO).get(item['contratos__tipo_contrato'], 'Desconocido')
+            ws.write(row, 0, tipo)
+            ws.write(row, 1, item['cantidad'])
+            max_len_col_a = max(max_len_col_a, len(tipo))
+            row += 1
+
+        # Género
+        ws.write(row, 0, "Género", seccion_format)
+        ws.write(row, 1, "Cantidad", seccion_format)
+        max_len_col_a = max(max_len_col_a, len("Género"))
+        row += 1
+
+        generos = empleados.values('genero').annotate(cantidad=models.Count('id'))
+        for item in generos:
+            genero_txt = dict(genero_Choices).get(item['genero'], 'Desconocido')
+            ws.write(row, 0, genero_txt)
+            ws.write(row, 1, item['cantidad'])
+            max_len_col_a = max(max_len_col_a, len(genero_txt))
+            row += 1
+
+        # Estado civil
+        ws.write(row, 0, "Estado civil", seccion_format)
+        ws.write(row, 1, "Cantidad", seccion_format)
+        max_len_col_a = max(max_len_col_a, len("Estado civil"))
+        row += 1
+
+        estados = empleados.values('estado_civil').annotate(cantidad=models.Count('id'))
+        for item in estados:
+            estado_txt = dict(estado_Civil_Choise).get(item['estado_civil'], 'Desconocido')
+            ws.write(row, 0, estado_txt)
+            ws.write(row, 1, item['cantidad'])
+            max_len_col_a = max(max_len_col_a, len(estado_txt))
+            row += 1
+
+        # Cargo
+        ws.write(row, 0, "Cargo", seccion_format)
+        ws.write(row, 1, "Cantidad", seccion_format)
+        max_len_col_a = max(max_len_col_a, len("Cargo"))
+        row += 1
+
+        cargos = empleados.values('contratos__cargo_departamento__id_cargo__nombre').annotate(cantidad=models.Count('id'))
+        for item in cargos:
+            cargo_txt = item['contratos__cargo_departamento__id_cargo__nombre'] or 'Desconocido'
+            ws.write(row, 0, cargo_txt)
+            ws.write(row, 1, item['cantidad'])
+            max_len_col_a = max(max_len_col_a, len(cargo_txt))
+            row += 1
+
+        # Departamento
+        ws.write(row, 0, "Departamento", seccion_format)
+        ws.write(row, 1, "Cantidad", seccion_format)
+        max_len_col_a = max(max_len_col_a, len("Departamento"))
+        row += 1
+
+        departamentos = empleados.values('contratos__cargo_departamento__id_departamento__nombre').annotate(
+            cantidad=models.Count('id'))
+        for item in departamentos:
+            depto_txt = item['contratos__cargo_departamento__id_departamento__nombre'] or 'Desconocido'
+            ws.write(row, 0, depto_txt)
+            ws.write(row, 1, item['cantidad'])
+            max_len_col_a = max(max_len_col_a, len(depto_txt))
+            row += 1
+
+        # Ajusta columna A
+        ws.set_column(0, 0, max_len_col_a + 2)
 
 class ReporteEmpleadosPdfView(APIView):
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name=nombre, type=tipo, location=OpenApiParameter.QUERY, description=desc)
+            for nombre, tipo, desc in PARAMETROS
+        ],
+        responses={200: {'description': 'PDF con el reporte de empleados'}}
+    )
     def get(self, request, *args, **kwargs):
         empresa = request.user.empresa
         empleados = Empleado.objects.filter(empresa=empresa)
