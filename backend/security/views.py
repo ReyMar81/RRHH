@@ -6,12 +6,28 @@ from rest_framework import status
 
 from security.serializers import CustomTokenObtainPairSerializer
 from security.models import UserTheme
+from apps.bitacora.utils import registrar_bitacora
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
+        # Obtener usuario autenticado del serializer
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.user
+            if user and user.is_authenticated:
+                registrar_bitacora(
+                    empresa=user.empresa,
+                    usuario=user,
+                    accion="Inicio de sesión",
+                    ip=request.META.get('REMOTE_ADDR'),
+                    detalles={"user_agent": request.META.get('HTTP_USER_AGENT')}
+                )
+        except Exception:
+            pass  # Si falla la autenticación, no registrar
         # Verifica que el refresh_token se incluya en la respuesta
         return response
 

@@ -2,6 +2,7 @@ from apps.bitacora.models import Bitacora
 from django.utils import timezone
 
 def registrar_bitacora(empresa, usuario, accion, ip=None, detalles=None, fecha_maquina=None):
+    print("Registrando bitácora:", empresa, usuario, accion)
     Bitacora.objects.create(
         empresa=empresa,
         usuario=usuario,

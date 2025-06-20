@@ -13,6 +13,7 @@ from .service import cambiar_password_con_validacion, crear_empleado_con_usuario
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
+from apps.bitacora.utils import registrar_bitacora
 
 # Create your views here.
 
@@ -24,7 +25,14 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         return Empleado.objects.filter(empresa=self.request.user.empresa)
 
     def perform_create(self, serializer):
-        serializer.save(empresa=self.request.user.empresa)
+        instance = serializer.save(empresa=self.request.user.empresa)
+        registrar_bitacora(
+            empresa=self.request.user.empresa,
+            usuario=self.request.user,
+            accion=f"Creó empleado {instance.id} ({instance.nombre} {instance.apellidos})",
+            ip=self.request.META.get('REMOTE_ADDR'),
+            detalles={"empleado_id": instance.id, "nombre": instance.nombre, "apellidos": instance.apellidos}
+        )
 
     
     @action(detail=False, methods=['get'], url_path='actual')
@@ -32,7 +40,13 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         empleado = Empleado.objects.filter(user_id=request.user).first()
         if not empleado:
             return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-    
+        registrar_bitacora(
+            empresa=request.user.empresa,
+            usuario=request.user,
+            accion=f"Consultó sus datos de empleado ({empleado.id})",
+            ip=request.META.get('REMOTE_ADDR'),
+            detalles={"empleado_id": empleado.id}
+        )
         serializer = self.get_serializer(empleado)
         return Response(serializer.data)
     
@@ -43,7 +57,13 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
         # Forzar empresa del usuario autenticado
         empresa = request.user.empresa
         empleado, username, password = crear_empleado_con_usuario(serializer.validated_data, empresa=empresa)
-
+        registrar_bitacora(
+            empresa=empresa,
+            usuario=request.user,
+            accion=f"Creó empleado {empleado.id} ({empleado.nombre} {empleado.apellidos})",
+            ip=request.META.get('REMOTE_ADDR'),
+            detalles={"username": username, "empleado_id": empleado.id}
+        )
         response_data = self.get_serializer(empleado).data
         return Response(response_data, status=status.HTTP_201_CREATED)
     

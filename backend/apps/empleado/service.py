@@ -18,6 +18,7 @@ def crear_empleado_con_usuario(data, empresa=None):
         password=password,
         first_name=data['nombre'],
         last_name=apellidos,
+        empresa=empresa
     )
 
     empleado_data = data.copy()
