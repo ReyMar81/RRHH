@@ -27,8 +27,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     detalles={"user_agent": request.META.get('HTTP_USER_AGENT')}
                 )
         except Exception:
-            pass  # Si falla la autenticación, no registrar
-        # Verifica que el refresh_token se incluya en la respuesta
+            pass
         return response
 
 

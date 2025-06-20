@@ -1,0 +1,14 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+
+# Django migrations
+*/migrations/
+!*/migrations/__init__.py
+
+# Archivos de log
+*.log
+
+# Archivos de sistema
+.DS_Store
