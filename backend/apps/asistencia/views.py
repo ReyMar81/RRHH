@@ -14,6 +14,7 @@ from .models import Asistencia
 from .serializer import AsistenciaSerializer
 from apps.empleado.models import Empleado
 from datetime import datetime, timedelta
+from apps.horas_extras.models import HorasExtras
 
 class RegistroAsistenciaViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -68,6 +69,11 @@ class RegistroAsistenciaViewSet(viewsets.ViewSet):
                 asistencia.observaciones = " / ".join(obs)
                 asistencia.save()
 
+                # Horas Extra
+                horasExtras = asistencia.horas_trabajadas - cargo.horas_de_trabajo
+                if horasExtras > 0.25: # tolerancia 15 minutos    
+                    HorasExtras.create(empleado, horasExtras)
+                    
                 return Response({'mensaje': 'Salida registrada correctamente'}, status=status.HTTP_200_OK)
 
             return Response({'mensaje': 'Entrada registrada correctamente'}, status=status.HTTP_201_CREATED)

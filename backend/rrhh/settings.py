@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.empresas',
     'apps.suscripciones',
     'apps.bitacora',
+    'apps.evaluacion',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
