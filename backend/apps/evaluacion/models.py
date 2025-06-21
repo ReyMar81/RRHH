@@ -2,5 +2,5 @@ from django.db import models
 
 # Create your models here.
 
-class evaluacion(models.Model):
+#class evaluacion(models.Model):
     
