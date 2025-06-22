@@ -13,3 +13,5 @@ class Empresa(models.Model):
     email=models.EmailField(blank=True,null=True)
     fecha_registro=models.DateTimeField(auto_now_add=True)
     estado=models.BooleanField(default=True)
+    
+    autorizaHorasExtra=models.BooleanField(default=True,blank=True)

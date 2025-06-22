@@ -17,6 +17,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+FRONTEND_URL = 'https://localhost:4200/api/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -58,6 +59,8 @@ INSTALLED_APPS = [
     'apps.empresas',
     'apps.suscripciones',
     'apps.bitacora',
+    'apps.evaluacion',
+    'apps.noticacion'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
