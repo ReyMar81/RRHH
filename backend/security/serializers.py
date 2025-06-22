@@ -18,6 +18,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             token['rol'] = None
 
         token['cambio_password_pendiente'] = user.cambio_password_pendiente
+        token['empresa'] = user.empresa_id 
 
         return token
 

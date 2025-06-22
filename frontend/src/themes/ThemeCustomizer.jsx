@@ -11,8 +11,8 @@ const ThemeCustomizer = () => {
                 <label>Color de Texto:</label>
                 <input
                     type="color"
-                    value={theme.color_text} // Cambiado a color_text
-                    onChange={(e) => updateTheme({ color_text: e.target.value })} // Cambiado a color_text
+                    value={theme.color_text}
+                    onChange={(e) => updateTheme({ color_text: e.target.value })}
                 />
             </div>
             <div>

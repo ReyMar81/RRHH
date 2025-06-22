@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Apiurl } from '../../services/Apirest';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode";
 import './Login.css'; // Archivo CSS para estilos personalizados
 
 function Login() {
@@ -22,22 +23,36 @@ function Login() {
         e.preventDefault();
         try {
             const response = await axios.post(`${Apiurl}security/token/`, formData);
-            // Guardar los tokens en el almacenamiento local
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
 
-            // Obtener el id de la empresa y guardarlo
+            // Decodificar el token para saber si es superadmin
+            const decoded = jwtDecode(response.data.access);
+            console.log("Token decodificado:", decoded); // <-- Ya tienes esto
+            console.log("¿Es superusuario?:", decoded.is_superuser); // <-- Agrega esta línea
+
+            if (decoded.is_superuser === true) {
+                navigate('/admindashboard');
+                return; // Esto detiene la función aquí
+            }
+
+            // Si no es superadmin, buscar empresa y redirigir a dashboard
             const empresaResponse = await axios.get(`${Apiurl}empresas/`, {
                 headers: {
                     Authorization: `Bearer ${response.data.access}`,
                 },
             });
-            localStorage.setItem('empresa_id', empresaResponse.data[0].id); // Suponiendo que el usuario tiene acceso a una empresa
 
-            // Redirigir al dashboard
-            navigate('/dashboard');
+            if (empresaResponse.data.length > 0) {
+                localStorage.setItem('empresa_id', empresaResponse.data[0].id);
+                navigate('/dashboard');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
+            } else {
+                setError('No tiene empresa asociada.');
+            }
         } catch (error) {
-            console.error('Error al iniciar sesión:', error);
             setError('Credenciales inválidas. Por favor, inténtelo de nuevo.');
         }
     };

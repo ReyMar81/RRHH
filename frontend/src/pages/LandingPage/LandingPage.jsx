@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css'; // Archivo CSS personalizado
 
 const LandingPage = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!localStorage.getItem('landingRefreshed')) {
+            localStorage.setItem('landingRefreshed', 'true');
+            setTimeout(() => {
+                window.location.reload();
+            }, 100); // 0.1 segundos
+        }
+    }, []);
 
     return (
         <div className="landing-page">

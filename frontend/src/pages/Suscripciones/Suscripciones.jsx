@@ -4,6 +4,11 @@ import axios from 'axios'; // Importa Axios directamente
 import { Apiurl } from '../../services/Apirest'; // Importa la URL base del API
 import './Suscripciones.css'; // Archivo CSS personalizado
 
+const PAISES = [
+    { value: "BOL", label: "Bolivia" }
+    // Puedes agregar más países si tu backend los soporta
+];
+
 const Suscripciones = () => {
     const [planes, setPlanes] = useState([]);
     const navigate = useNavigate();

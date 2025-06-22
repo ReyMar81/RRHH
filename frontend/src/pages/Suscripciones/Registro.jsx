@@ -4,6 +4,10 @@ import axios from 'axios'; // Importa Axios directamente
 import { Apiurl } from '../../services/Apirest'; // Importa la URL base del API
 import './Registro.css'; // Archivo CSS personalizado
 
+const PAISES = [
+    { value: "BOL", label: "Bolivia" }
+];
+
 const Registro = () => {
     const location = useLocation(); // Obtén el estado de navegación
     const navigate = useNavigate(); // Hook para redirigir
@@ -13,9 +17,10 @@ const Registro = () => {
         nombre: '',
         direccion: '',
         telefono: '',
-        email_admin: '',
+        email: '',
         username_admin: '',
         plan_id: planIdSeleccionado, // Inicializa con el plan seleccionado
+        pais: '' // Nuevo estado para el país
     });
 
     const [planes, setPlanes] = useState([]); // Estado para almacenar los planes
@@ -105,7 +110,7 @@ const Registro = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="email_admin" className="form-label">Correo Electrónico</label>
+                    <label htmlFor="email" className="form-label">Correo Electrónico</label>
                     <input
                         type="email"
                         className="form-control"
@@ -156,6 +161,24 @@ const Registro = () => {
                         value={costoPlan}
                         readOnly
                     />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="pais" className="form-label">País</label>
+                    <select
+                        className="form-select"
+                        id="pais"
+                        name="pais"
+                        value={formData.pais}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Seleccione un país</option>
+                        {PAISES.map((pais) => (
+                            <option key={pais.value} value={pais.value}>
+                                {pais.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <button type="submit" className="btn btn-primary w-100 registro-button">Registrar Empresa</button>
             </form>
