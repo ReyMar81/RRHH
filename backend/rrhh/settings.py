@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'apps.suscripciones',
     'apps.bitacora',
     'apps.evaluacion',
-    'apps.noticacion'
+    'apps.noticacion',
+    'apps.nomina'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

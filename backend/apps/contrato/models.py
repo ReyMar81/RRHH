@@ -15,7 +15,7 @@ TIPOS_CONTRATO = [
 ESTADOS_CONTRATO = [
         ('ACTIVO', 'Activo'),
         ('FINALIZADO', 'Finalizado'),
-        ('PENDIENTE', 'Pendiente'),  #Pendiente de firma
+        ('PENDIENTE', 'Pendiente'),
         ('RENOVADO', 'Renovado'),
     ]
 
