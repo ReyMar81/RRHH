@@ -19,6 +19,6 @@ urlpatterns = [
     path('api/', include('apps.categoria.urls')),
     path('api/', include('apps.empresas.urls')),
     path('api/', include('apps.suscripciones.urls')),
-    path('bitacora/', include('apps.bitacora.urls')),
+    path('api/', include('apps.bitacora.urls')),
 
 ]

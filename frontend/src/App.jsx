@@ -15,43 +15,44 @@ import { ThemeProvider } from './themes/ThemeContext';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Suscripciones from './pages/Suscripciones/Suscripciones';
 import Registro from './pages/Suscripciones/Registro';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
+import LoginAdmin from './pages/Login/LoginAdmin';
+import Empresas from './pages/GestionAdmin/Empresas';
+import Bitacora from './pages/GestionAdmin/Bitacora';
+import BitacoraEmpresa from './pages/GestionAdmin/BitacoraEmpresa';
 
 function App() {
   return (
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/suscripciones/*" element={<Suscripciones />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ThemeProvider>
-                <Dashboard />
-              </ThemeProvider>
-            }
-          >
-            <Route path="departamentos" element={<Departamentos />} />
-            <Route path="empleados" element={<Empleados />} />
-            <Route path="documentos" element={<Documentos />} />
-            <Route path="cargos" element={<Cargos />} />
-            <Route path="asistencia" element={<Asistencia />} />
-            <Route path="contratos" element={<Contratos />} />
-            <Route path="categorias" element={<Categorias />} />
-            <Route path="tipos" element={<Tipos />} />
-            <Route path="cargos_departamentos" element={<CargosDepartamentos />} />
-            <Route path="perfil" element={<Perfil />} />
-          </Route>
-          <Route
-            path="/login"
-            element={
-              <ThemeProvider>
-                <Login />
-              </ThemeProvider>
-            }
-          />
-        </Routes>
-      </Router>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/suscripciones/*" element={<Suscripciones />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/admindashboard" element={<AdminDashboard />}>
+          <Route path="empresas" element={<Empresas />} />
+          <Route path="bitacora" element={<Bitacora />} />
+          <Route path="logs" element={<BitacoraEmpresa />} />
+        </Route>
+
+        <Route path="/dashboard" element={<ThemeProvider><Dashboard /></ThemeProvider>}>
+          <Route path="departamentos" element={<Departamentos />} />
+          <Route path="empleados" element={<Empleados />} />
+          <Route path="documentos" element={<Documentos />} />
+          <Route path="cargos" element={<Cargos />} />
+          <Route path="asistencia" element={<Asistencia />} />
+          <Route path="contratos" element={<Contratos />} />
+          <Route path="categorias" element={<Categorias />} />
+          <Route path="tipos" element={<Tipos />} />
+          <Route path="cargos_departamentos" element={<CargosDepartamentos />} />
+          <Route path="perfil" element={<Perfil />} />
+          <Route path="bitacora" element={<Bitacora />} />
+
+        </Route>
+        <Route path="/login" element={<ThemeProvider><Login /> </ThemeProvider>}/>
+        <Route path="/loginadmin" element={<ThemeProvider><LoginAdmin /> </ThemeProvider>}/>
+
+      </Routes>
+    </Router>
   );
 }
 
