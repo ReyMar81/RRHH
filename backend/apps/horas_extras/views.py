@@ -62,7 +62,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         
         for aprobador in aprobadores:
             Notificacion.objects.create(
-                user = aprobador.empleado,
+                empleado = aprobador.empleado,
                 titulo='Solicitud de horas extra',
                 mensaje=f'{empleado.nombre} {empleado.apellidos} solicitó {horas_solicitadas} horas extra',
                 url = f'{url_base}/horas-extra/{registro.id}/responder', #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD
@@ -77,14 +77,17 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
             aprobador = Empleado.objects.get(user=request.user)
         except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no encontrado'}, status=404)
-        departamento_aprobador = aprobador.departamento_del_empleado()
+        departamentos_autorizados = Aprobadores.objects.filter(
+            empleado=aprobador,
+            encargado_de='hora_extra'
+        ).values_list('departamento', flat=True)
         solicitudes = HorasExtras.objects.filter(
             aprobado__isnull = True,
             empleado_autorizador__isnull = True
         )
         solicitudes_filtradas = [
             s for s in solicitudes
-            if s.empleado_solicitador.departamento_del_empleado() == departamento_aprobador
+            if s.empleado_solicitador.departamento_del_empleado() in departamentos_autorizados
         ]
         
         serializer = HorasExtrasSerializer(solicitudes_filtradas, many=True)
@@ -111,7 +114,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         solicitud.save()
         
         Notificacion.objects.create(
-            user=solicitud.empleado_solicitador,
+            empleado=solicitud.empleado_solicitador,
             titulo='Respuesta a tu solicitud de horas extra',
             mensaje=(
                 f'Tu solicitud de {solicitud.cantidad_horas_extra_solicitadas} horas extra '

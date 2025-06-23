@@ -7,12 +7,12 @@ class EvaluacionSerializer(serializers.ModelSerializer):
         model = Evaluacion
         exclude = ['empresa']
         
-class CriterioEvaluacionSereializer(serializers.ModelSerializer):
+class CriterioEvaluacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CriterioEvaluacion
         exclude = ['empresa']
 
-class ResultadoEvaluacionSereializer(serializers.ModelSerializer):
+class ResultadoEvaluacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResultadoEvaluacion
         exclude = ['empresa']

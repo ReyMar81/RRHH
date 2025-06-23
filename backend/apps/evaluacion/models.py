@@ -48,6 +48,8 @@ class Evaluacion(models.Model):
             departamento=self.evaluado.departamento_del_empleado(),
             encargado_de = 'evaluacion'
         ).exists()
+        
+    
     
 class CriterioEvaluacion(models.Model):
     nombre = models.CharField(max_length=75)
