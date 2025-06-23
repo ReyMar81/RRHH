@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.horas_extras.models import HorasExtras, AprobadoresDeHorasExtra
+from apps.horas_extras.models import HorasExtras, Aprobadores
 from apps.horas_extras.serializers import HorasExtrasSerializer, AprobadoresDeHorasExtraSereializer
 from apps.empleado.models import Empleado
 from apps.contrato.models import Contrato
@@ -41,6 +41,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         motivo = request.data.get('motivo')
         
         registro = HorasExtras.objects.create(
+            cantidad_horas_extra_trabajadas=timedelta(),
             cantidad_horas_extra_solicitadas=duracion,
             estado="IMPAGO",
             motivo=motivo,
@@ -48,11 +49,14 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
             empresa=empleado.empresa
         )
         
-        contrato = Contrato.objects.filter(empleado=empleado, estado='ACTIVO').select_related('cargo_departamento__id_departamento').first()
-        if not contrato:
+        departamento = empleado.departamento_del_empleado()
+        if not departamento:
             return Response({'error': 'Contrato activo no encontrado'}, status=404)
-        departamento = contrato.cargo_departamento.id_departamento
-        aprobadores = AprobadoresDeHorasExtra.objects.filter(departamento=departamento)
+
+        aprobadores = Aprobadores.objects.filter(
+            departamento=departamento,
+            encargado_de='hora_extra'
+            )
         
         url_base = settings.FRONTEND_URL
         
@@ -61,7 +65,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
                 user = aprobador.empleado.user_id,
                 titulo='Solicitud de horas extra',
                 mensaje=f'{empleado.nombre} {empleado.apellidos} solicitó {horas_solicitadas} horas extra',
-                url = f'{url_base}/horas-extra/{registro.id}/responder"', #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD
+                url = f'{url_base}/horas-extra/{registro.id}/responder', #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD
                 empresa = empleado.empresa
             )
         
@@ -120,7 +124,10 @@ class AprobadoresDeHorasExtraViewSet(viewsets.ModelViewSet):
     serializer_class = AprobadoresDeHorasExtraSereializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
-        return  AprobadoresDeHorasExtra.objects.filter(empresa=self.request.user.empresa)
+        return  Aprobadores.objects.filter(
+            empresa=self.request.user.empresa,
+            encargado_de='hora_extra' 
+            )
     
     def perform_create(self, serializer):
         serializer.save(empresa=self.request.user.empresa)
@@ -133,3 +140,6 @@ def strAHoras(horas:str):
         return timedelta(hours=hora, minutes=mint)
     except:
         raise ValueError('Formato invalido, debe ser HH:MM')     
+    
+    
+    

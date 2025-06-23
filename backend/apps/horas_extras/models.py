@@ -38,6 +38,13 @@ class HorasExtras(models.Model):
     fecha_autorizacion = models.DateTimeField(blank=True, null=True)
     empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
     
+    def puede_ser_aprobada_por(self, aprobador: Empleado):
+        return Aprobadores.objects.filter(
+            empleado=aprobador,
+            departamento=self.empleado_solicitador.departamento_del_empleado(),
+            encargado_de = 'hora_extra'
+        ).exists()
+    
     @staticmethod
     def create(empleado:Empleado, horas):
         duracion = timedelta(hours=horas)
@@ -64,19 +71,16 @@ class HorasExtras(models.Model):
                 empleado_solicitador = empleado,
                 empresa = empleado.empresa
             )
-    def puede_ser_aprobada_por(self, aprobador: Empleado):
-        return AprobadoresDeHorasExtra.objects.filter(
-            empleado=aprobador,
-            departamento=self.empleado_solicitador.departamento_del_empleado()
-        ).exists()
-            
-class AprobadoresDeHorasExtra(models.Model):
-    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE,)
-    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
-    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    
-    # @staticmethod
-    # def solicitudes_del_aprobador(empleado:Empleado, ):
-    #     empleado = self.empleado
-    #     departamento = empleado.departamento_del_empleado()
+
         
+        
+ENCARGADO_CHOICES = [
+    ('hora_extra', 'Hora Extra'),
+    ('evaluacion', 'Evaluación'),
+]
+
+class Aprobadores(models.Model):
+    empleado = models.ForeignKey(Empleado, on_delete=models.PROTECT,)
+    departamento = models.ForeignKey(Departamento, on_delete=models.PROTECT)
+    empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    encargado_de = models.CharField(max_length=15,choices=ENCARGADO_CHOICES)

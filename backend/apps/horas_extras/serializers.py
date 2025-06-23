@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.horas_extras.models import HorasExtras, AprobadoresDeHorasExtra
+from apps.horas_extras.models import HorasExtras, Aprobadores
 
 
 class HorasExtrasSerializer(serializers.ModelSerializer):
@@ -10,5 +10,5 @@ class HorasExtrasSerializer(serializers.ModelSerializer):
         
 class AprobadoresDeHorasExtraSereializer(serializers.ModelSerializer):
     class Meta:
-        model = AprobadoresDeHorasExtra
+        model = Aprobadores
         exclude = ['empresa']
