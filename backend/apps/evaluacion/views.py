@@ -55,7 +55,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         
         for aprobador in aprobadores:
             Notificacion.objects.create(
-                user = aprobador.empleado.user_id,
+                user = aprobador.empleado,
                 titulo='Nueva evaluación pendiente',
                 mensaje=f'Se solicitó una evaluación para: {evaluado.nombre} {evaluado.apellidos}',
                 url = f'{url_base}/evaluaciones/{evaluacion.id}/realizar', #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD

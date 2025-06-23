@@ -5,4 +5,4 @@ class NotificacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notificacion
         exclude = ['empresa']
-        read_only_fields = ['user', 'fecha_creacion']
+        read_only_fields = ['empleado', 'fecha_creacion']

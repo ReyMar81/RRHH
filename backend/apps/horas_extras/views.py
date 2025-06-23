@@ -62,7 +62,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         
         for aprobador in aprobadores:
             Notificacion.objects.create(
-                user = aprobador.empleado.user_id,
+                user = aprobador.empleado,
                 titulo='Solicitud de horas extra',
                 mensaje=f'{empleado.nombre} {empleado.apellidos} solicitó {horas_solicitadas} horas extra',
                 url = f'{url_base}/horas-extra/{registro.id}/responder', #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD
@@ -111,12 +111,12 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         solicitud.save()
         
         Notificacion.objects.create(
-    user=solicitud.empleado_solicitador.user_id,
-    titulo='Respuesta a tu solicitud de horas extra',
-    mensaje=(
-        f'Tu solicitud de {solicitud.cantidad_horas_extra_solicitadas} horas extra '
-        f'ha sido {"aprobada" if solicitud.aprobado else "rechazada"} por {aprobador.nombre} {aprobador.apellidos}.'
-    ),
+            user=solicitud.empleado_solicitador,
+            titulo='Respuesta a tu solicitud de horas extra',
+            mensaje=(
+                f'Tu solicitud de {solicitud.cantidad_horas_extra_solicitadas} horas extra '
+                f'ha sido {"aprobada" if solicitud.aprobado else "rechazada"} por {aprobador.nombre} {aprobador.apellidos}.'
+        ),
     empresa=solicitud.empresa
 )
     

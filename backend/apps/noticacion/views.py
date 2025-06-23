@@ -11,4 +11,5 @@ class NotificacionViewSet(viewsets.ModelViewSet):
     serializer_class = NotificacionSerializer
 
     def get_queryset(self):
-        return Notificacion.objects.filter(user=self.request.user,empresa=self.request.user.empresa).order_by('fecha_creacion')
+    empleado = self.request.user.empleado  # asumiendo relación OneToOne
+    return Notificacion.objects.filter(empleado=empleado, empresa=empleado.empresa).order_by('fecha_creacion')
