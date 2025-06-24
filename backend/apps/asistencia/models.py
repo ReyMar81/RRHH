@@ -2,12 +2,13 @@ from django.db import models
 
 from apps.empleado.models import Empleado
 from apps.empresas.models import Empresa
+from datetime import date
 
 
 # Create your models here.
 
 class Asistencia(models.Model):
-    fecha = models.DateField(auto_now_add=True)
+    fecha = models.DateField(default=date.today, blank=True)
     hora_entrada = models.TimeField(null=True, blank=True)
     hora_salida = models.TimeField(null=True, blank=True)
     horas_trabajadas = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)

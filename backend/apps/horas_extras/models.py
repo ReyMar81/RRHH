@@ -3,7 +3,7 @@ from django.db import models
 from apps.empleado.models import Empleado
 from apps.empresas.models import Empresa
 from apps.departamento.models import Departamento
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 # Create your models here.
 
@@ -33,7 +33,7 @@ class HorasExtras(models.Model):
         on_delete=models.PROTECT,
         related_name='horas_extra_solicitador'
     )
-    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    fecha_solicitud = models.DateTimeField(default=datetime.now, blank=True, null=True)
     fecha_autorizacion = models.DateTimeField(blank=True, null=True)
     empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
     
