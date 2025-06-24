@@ -5,7 +5,6 @@ from apps.empresas.models import Empresa
 from apps.departamento.models import Departamento
 from datetime import timedelta
 
-
 # Create your models here.
 
 class HorasExtras(models.Model):
@@ -21,7 +20,7 @@ class HorasExtras(models.Model):
     cantidad_horas_extra_solicitadas = models.DurationField(null=True,blank=True)
     estado = models.CharField(max_length=7, choices=estados)
     aprobado = models.BooleanField(blank=True, null=True)
-    motivo = models.CharField(max_length=255, blank= True)
+    motivo = models.CharField(max_length=255, blank= True, null=True)
     empleado_autorizador = models.ForeignKey(
         Empleado,
         on_delete=models.PROTECT,
@@ -72,8 +71,7 @@ class HorasExtras(models.Model):
                 empresa = empleado.empresa
             )
 
-        
-        
+
 ENCARGADO_CHOICES = [
     ('hora_extra', 'Hora Extra'),
     ('evaluacion', 'Evaluación'),

@@ -31,6 +31,7 @@ class Empleado(models.Model):
     telefono = models.CharField(max_length=20)
     fecha_ingreso = models.DateField(auto_now_add=True)
     correo_personal = models.EmailField(max_length=254, null=True, blank=True)
+    cuenta_bancaria = models.CharField(max_length=25, null=True, blank=True)
     user_id = models.OneToOneField(User, on_delete=models.CASCADE, 
                                    related_name='empleado', blank=True)
     empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
