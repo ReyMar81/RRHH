@@ -10,9 +10,10 @@ from apps.empresas.models import Empresa
 from apps.empleado.models import Empleado
 from datetime import datetime
 from drf_spectacular.utils import extend_schema, OpenApiExample
-from apps.plantillas_nomina.models import EstructuraSalarialPlantilla, ReglaSalarialPlantilla
+from apps.plantillas_nomina.models import EstructuraSalarialPlantilla, ReglaSalarialPlantilla, Pais
 from .serializers_clonacion import ClonarEstructuraPlantillaSerializer
 from rest_framework import serializers
+from .serializers_pais import PaisSerializer
 
 class EstructuraSalarialViewSet(viewsets.ModelViewSet):
     queryset = EstructuraSalarial.objects.all()
@@ -138,40 +139,99 @@ class GenerarNominaManualView(APIView):
         else:
             return Response({'error': 'No se pudo generar la nómina para el empleado.'}, status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(
+    request=ClonarEstructuraPlantillaSerializer,
+    responses={201: OpenApiExample(
+        'Respuesta exitosa',
+        value={
+            "estructuras_clonadas": 5,
+            "ids": [1, 2, 3, 4, 5]
+        },
+        response_only=True
+    )},
+    examples=[
+        OpenApiExample(
+            'Ejemplo de clonación por país',
+            value={
+                "empresa_id": 1,
+                "pais_id": 2
+            },
+            request_only=True
+        )
+    ],
+    description="Clona todas las estructuras plantilla y sus reglas de un país a la empresa seleccionada."
+)
 class ClonarEstructuraPlantillaView(APIView):
     """
-    Clona una estructura plantilla y sus reglas a una empresa.
+    Clona todas las estructuras plantilla y sus reglas de un país a la empresa seleccionada.
     """
     def post(self, request):
         serializer = ClonarEstructuraPlantillaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         empresa_id = serializer.validated_data['empresa_id']
-        estructura_plantilla_id = serializer.validated_data['estructura_plantilla_id']
+        pais_id = serializer.validated_data['pais_id']
         empresa = get_object_or_404(Empresa, id=empresa_id)
-        plantilla = get_object_or_404(EstructuraSalarialPlantilla, id=estructura_plantilla_id)
-        # Clonar estructura
-        estructura = EstructuraSalarial.objects.create(
-            nombre=plantilla.nombre,
-            descripcion=plantilla.descripcion,
-            empresa=empresa,
-            tipo_contrato=plantilla.tipo_contrato,
-            pais=plantilla.pais.nombre,
-            activa=True
-        )
-        # Clonar reglas
-        reglas_plantilla = ReglaSalarialPlantilla.objects.filter(estructura=plantilla)
-        for regla in reglas_plantilla:
-            ReglaSalarial.objects.create(
-                estructura=estructura,
-                nombre=regla.nombre,
-                codigo=regla.codigo,
-                tipo=regla.tipo,
-                secuencia=regla.secuencia,
-                condicion=regla.condicion,
-                formula=regla.formula,
+        pais = get_object_or_404(Pais, id=pais_id)
+        estructuras_plantilla = EstructuraSalarialPlantilla.objects.filter(pais=pais)
+        if not estructuras_plantilla.exists():
+            return Response({'error': 'No hay estructuras plantilla para este país.'}, status=status.HTTP_400_BAD_REQUEST)
+        ids = []
+        for plantilla in estructuras_plantilla:
+            estructura = EstructuraSalarial.objects.create(
+                nombre=plantilla.nombre,
+                descripcion=plantilla.descripcion,
                 empresa=empresa,
-                pais=plantilla.pais.nombre
+                tipo_contrato=plantilla.tipo_contrato,
+                pais=pais.nombre,
+                activa=True
             )
-        return Response({'estructura_id': estructura.id}, status=status.HTTP_201_CREATED)
+            reglas_plantilla = ReglaSalarialPlantilla.objects.filter(estructura=plantilla)
+            for regla in reglas_plantilla:
+                ReglaSalarial.objects.create(
+                    estructura=estructura,
+                    nombre=regla.nombre,
+                    codigo=regla.codigo,
+                    tipo=regla.tipo,
+                    secuencia=regla.secuencia,
+                    condicion=regla.condicion,
+                    formula=regla.formula,
+                    empresa=empresa,
+                    pais=pais.nombre
+                )
+            ids.append(estructura.id)
+        return Response({'estructuras_clonadas': len(ids), 'ids': ids}, status=status.HTTP_201_CREATED)
+
+class PaisListView(APIView):
+    def get(self, request):
+        paises = Pais.objects.all()
+        serializer = PaisSerializer(paises, many=True)
+        return Response(serializer.data)
+
+class BoletasPorEmpleadoView(APIView):
+    def get(self, request, empleado_id):
+        boletas = BoletaPago.objects.filter(empleado_id=empleado_id).order_by('-fecha_inicio')
+        data = [
+            {
+                'id': b.id,
+                'fecha_inicio': b.fecha_inicio,
+                'fecha_fin': b.fecha_fin,
+                'total_neto': b.total_neto,
+                'total_ingresos': b.total_ingresos,
+                'total_deducciones': b.total_deducciones,
+                'estado': b.estado,
+                'modo_generacion': b.modo_generacion,
+                'detalles': [
+                    {
+                        'nombre': d.nombre,
+                        'codigo': d.codigo,
+                        'tipo': d.tipo,
+                        'monto': d.monto,
+                        'secuencia': d.secuencia
+                    } for d in b.detalles.all()
+                ]
+            }
+            for b in boletas
+        ]
+        return Response(data)
 
 # Vistas para la lógica de nómina irán aquí

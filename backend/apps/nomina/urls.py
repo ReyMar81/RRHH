@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import EstructuraSalarialViewSet, ReglaSalarialViewSet, BoletaPagoViewSet, DetalleBoletaPagoViewSet
-from .views import GenerarNominaMasivaView, GenerarNominaManualView, ClonarEstructuraPlantillaView
+from .views import GenerarNominaMasivaView, GenerarNominaManualView, ClonarEstructuraPlantillaView, PaisListView, BoletasPorEmpleadoView
 
 router = DefaultRouter()
 router.register(r'estructuras', EstructuraSalarialViewSet, basename='estructura')
@@ -13,4 +13,6 @@ urlpatterns = router.urls + [
     path('generar-masiva/', GenerarNominaMasivaView.as_view(), name='generar_nomina_masiva'),
     path('generar-manual/', GenerarNominaManualView.as_view(), name='generar_nomina_manual'),
     path('clonar-estructura/', ClonarEstructuraPlantillaView.as_view(), name='clonar_estructura_plantilla'),
+    path('pais/', PaisListView.as_view(), name='pais_list'),
+    path('boletas-empleado/<int:empleado_id>/', BoletasPorEmpleadoView.as_view(), name='boletas_por_empleado'),
 ]
