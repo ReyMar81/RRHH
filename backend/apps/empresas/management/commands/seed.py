@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 'nombre': datos['nombre'],
                 'email_admin': datos['email_admin'],
                 'direccion': fake.address(),
-                'telefono': fake.phone_number()[:20],
+                'telefono': '+591' + ''.join([str(random.randint(0, 9)) for _ in range(8)]),
                 'plan_id': plan,
                 'pais': 'BOL',
                 'autorizaHorasExtra': True
@@ -61,14 +61,28 @@ class Command(BaseCommand):
 
             resumen = [f'\n🔐 Credenciales para {empresa.nombre}:']
             resumen.append(f'    Admin      -> {admin_user.username} / {admin_pass}')
-            if supervisores:
-                sup, user, pwd = supervisores[0]
-                resumen.append(f'    Supervisor -> {user} / {pwd} - {sup.nombre} {sup.apellidos}')
-            if empleados:
-                emp, user, pwd = empleados[0]
-                resumen.append(f'    Empleado   -> {user} / {pwd} - {emp.nombre} {emp.apellidos}')
+            if supervisores and empleados:
+                for sup, sup_user, sup_pwd in supervisores:
+                    contrato_sup = Contrato.objects.filter(empleado=sup, estado='ACTIVO').first()
+                    if not contrato_sup:
+                        continue
+                    departamento_sup = contrato_sup.cargo_departamento.id_departamento
+
+                    for emp, emp_user, emp_pwd in empleados:
+                        contrato_emp = Contrato.objects.filter(empleado=emp, estado='ACTIVO').first()
+                        if contrato_emp and contrato_emp.cargo_departamento.id_departamento == departamento_sup:
+                            resumen.append(f'    Supervisor -> {sup_user} / {sup_pwd} - {sup.nombre} {sup.apellidos}')
+                            resumen.append(f'                 Cargo: {contrato_sup.cargo_departamento.id_cargo.nombre} | Departamento: {departamento_sup.nombre}')
+                            resumen.append(f'    Empleado   -> {emp_user} / {emp_pwd} - {emp.nombre} {emp.apellidos}')
+                            resumen.append(f'                 Cargo: {contrato_emp.cargo_departamento.id_cargo.nombre} | Departamento: {departamento_sup.nombre}')
+                            break
+                    else:
+                        continue
+                    break
+
             resumen_credenciales.append('\n'.join(resumen))
 
+        # ✅ Mostrar todo el resumen al final
         self.stdout.write(self.style.SUCCESS('\n===== RESUMEN DE CREDENCIALES ====='))
         for r in resumen_credenciales:
             self.stdout.write(self.style.WARNING(r))
@@ -116,7 +130,7 @@ class Command(BaseCommand):
                 'genero': genero,
                 'estado_civil': random.choice(['S', 'C', 'V']),
                 'direccion': fake.address(),
-                'telefono': fake.phone_number()[:20],
+                'telefono': '+591' + ''.join([str(random.randint(0, 9)) for _ in range(8)]),
                 'correo_personal': fake.email(),
                 'cuenta_bancaria': cuenta_bancaria
             }
@@ -178,7 +192,7 @@ class Command(BaseCommand):
                     'genero': genero,
                     'estado_civil': random.choice(['S', 'C', 'V']),
                     'direccion': fake.address(),
-                    'telefono': fake.phone_number()[:20],
+                    'telefono': '+591' + ''.join([str(random.randint(0, 9)) for _ in range(8)]),
                     'correo_personal': fake.email(),
                     'cuenta_bancaria': cuenta_bancaria
                 }
@@ -212,7 +226,7 @@ class Command(BaseCommand):
                     'genero': genero,
                     'estado_civil': random.choice(['S', 'C', 'V']),
                     'direccion': fake.address(),
-                    'telefono': fake.phone_number()[:20],
+                    'telefono': '+591' + ''.join([str(random.randint(0, 9)) for _ in range(8)]),
                     'correo_personal': fake.email(),
                     'cuenta_bancaria': cuenta_bancaria
                 }
