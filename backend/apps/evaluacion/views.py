@@ -19,7 +19,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         try:
-            empleado = Empleado.objects.get(user=self.request.user)
+            empleado = Empleado.objects.get(user_id=self.request.user)
             return Evaluacion.objects.filter(empresa=empleado.empresa)
         except Empleado.DoesNotExist:
             return Evaluacion.objects.none()
@@ -29,7 +29,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='solicitar')
     def solicitar_evaluacion(self, request):
         try:
-            solicitador = Empleado.objects.get(user=request.user)
+            solicitador = Empleado.objects.get(user_id=request.user)
         except Empleado.DoesNotExist:
             return Response({'error': 'solicitador no encontrado'}, status=404)
         
@@ -81,7 +81,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='pendientes-evaluar')
     def pendientes_evaluar(self, request):
         try:
-            evaluador = Empleado.objects.get(user=request.user)
+            evaluador = Empleado.objects.get(user_id=request.user)
         except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no encontrado'}, status=404)
         departamentos_autorizados = Aprobadores.objects.filter(
@@ -103,7 +103,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     def aceptar_evaluacion(self, request, pk=None):
         try:
             evaluacion = self.get_object()
-            evaluador = Empleado.objects.get(user=request.user)
+            evaluador = Empleado.objects.get(user_id=request.user)
         except:
             return Response({'error': 'Evaluación o empleado no encontrado'}, status=404)
         if evaluacion.evaluador:
@@ -132,7 +132,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     def agregar_criterio(self, request, pk=None):
         try:
             evaluacion = self.get_object()
-            evaluador = Empleado.objects.get(user=request.user)
+            evaluador = Empleado.objects.get(user_id=request.user)
         except:
             return Response({'error': 'Error de autenticación'}, status=404)
 
@@ -167,7 +167,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     def finalizar_evaluacion(self, request, pk=None):
         try:
             evaluacion = self.get_object()
-            evaluador = Empleado.objects.get(user=request.user)
+            evaluador = Empleado.objects.get(user_id=request.user)
         except:
             return Response({'error': 'Error localizando evaluación o empleado'}, status=404)
 
@@ -202,7 +202,7 @@ class ResultadoEvaluacionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            evaluador = Empleado.objects.get(user=self.request.user)
+            evaluador = Empleado.objects.get(user_id=self.request.user)
         except Empleado.DoesNotExist:
             raise PermissionDenied("Empleado no válido.")
 

@@ -3,7 +3,8 @@ from django.db import models
 from apps.empleado.models import Empleado
 from apps.empresas.models import Empresa
 from apps.departamento.models import Departamento
-from datetime import timedelta, datetime
+from datetime import timedelta
+from django.utils import timezone
 
 # Create your models here.
 
@@ -68,6 +69,7 @@ class HorasExtras(models.Model):
                 estado = "IMPAGO",
                 motivo = "Trabajo tiempo extra",
                 empleado_solicitador = empleado,
+                fecha_autorizacion = timezone.now(),
                 empresa = empleado.empresa
             )
 

@@ -8,6 +8,9 @@ from drf_spectacular.utils import extend_schema
 from apps.empresas.models import Empresa
 from apps.empresas.serializers import EmpresaSerializer, EmpresaRegistroSerializer
 from apps.empresas.service import crear_empresa_con_admin
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 
 # Create your views here.
 class EmpresaViewSet(viewsets.ModelViewSet):
@@ -37,27 +40,44 @@ class EmpresaRegistroView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Funcion para cabiar el tipo de horas extra
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def AutorizarHorasExtr(request):
-    empresa = getattr(request.user, 'empresa', None)
-    
-    if not empresa:
-        return Response(status=400)
+    @swagger_auto_schema(
+        method='patch',
+        operation_summary="Actualizar autorización de horas extra",
+        operation_description="Activa o desactiva la autorización de horas extra para la empresa del usuario autenticado.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['autoriza'],
+            properties={
+                'autoriza': openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description='Valor booleano que indica si se autoriza (true) o no (false) el uso de horas extra.'
+                )
+            }
+        ),
+        responses={
+            204: openapi.Response(description="Actualización realizada con éxito"),
+            400: openapi.Response(description="Error en los datos enviados o empresa no disponible")
+        }
+    )
+    @api_view(['PATCH'])
+    def AutorizarHorasExtr(request):
+        empresa = getattr(request.user, 'empresa', None)
 
-    autoriza = request.data.get('autoriza')
-    
-    if autoriza is None:
-        return Response({'error': 'Debe incluir el campo "autoriza" como booleano'}, status=400)
+        if not empresa:
+            return Response({'error': 'Empresa no encontrada'}, status=400)
 
-    if isinstance(autoriza, str):
-        autoriza = autoriza.lower() == 'true'
+        autoriza = request.data.get('autoriza')
 
-    if not isinstance(autoriza, bool):
-        return Response({'error': 'Formato inválido'}, status=400)
+        if autoriza is None:
+            return Response({'error': 'Debe incluir el campo "autoriza" como booleano'}, status=400)
 
-    empresa.autorizaHorasExtra = autoriza
-    empresa.save()
+        if isinstance(autoriza, str):
+            autoriza = autoriza.lower() == 'true'
 
-    return Response(status=204)
+        if not isinstance(autoriza, bool):
+            return Response({'error': 'Formato inválido'}, status=400)
+
+        empresa.autorizaHorasExtra = autoriza
+        empresa.save()
+
+        return Response(status=204) 

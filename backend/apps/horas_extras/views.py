@@ -10,7 +10,10 @@ from apps.contrato.models import Contrato
 from apps.noticacion.models import Notificacion
 from datetime import timedelta
 from rrhh import settings
-from datetime import timezone
+from django.utils import timezone
+
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 # Create your views here.
@@ -21,14 +24,47 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return HorasExtras.objects.filter(empresa=self.request.user.empresa)
+    @swagger_auto_schema(
+        method='post',
+        operation_summary="Solicitar horas extra",
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                required=["cantidad_horas_extra_solicitadas", "motivo"],
+                properties={
+                "cantidad_horas_extra_solicitadas": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    example="2:30",
+                    description="Cantidad de horas solicitadas (formato HH:MM o decimal)"
+                ),
+                "motivo": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    example="Resolviendo bug crítico",
+                    description="Motivo de la solicitud"
+                )
+            }
+        ),
+        responses={
+            201: openapi.Response(
+                description="Solicitud registrada correctamente",
+                examples={
+                    "application/json": {
+                        "mensaje": "Solicitud registrada correctamente"
+                    }
+                }
+            ),
+            400: "Datos inválidos",
+            404: "Empleado no registrado"
+        }
+    )
 
+    
     @action(detail=False, methods=['post'], url_path='solicitar')
     def solicitar_horas_extra(self, request):
         try:
-            empleado = Empleado.objects.get(user=request.user)
+            empleado = Empleado.objects.get(user_id=request.user)
         except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no registrado'}, status=404)
-        horas_solicitadas = request.data.get('horas_solicitadas')
+        horas_solicitadas = request.data.get('cantidad_horas_extra_solicitadas')
         if not horas_solicitadas:
             return Response({'error': 'Debe indicar cuántas horas desea solicitar'}, status=400)
         try:
@@ -46,6 +82,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
             estado="IMPAGO",
             motivo=motivo,
             empleado_solicitador=empleado,
+            fecha_solicitud = timezone.now(),
             empresa=empleado.empresa
         )
         
@@ -71,10 +108,15 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         
         return Response({'mensaje': 'Solicitud registrada correctamente'}, status=201)
 
+    @swagger_auto_schema(
+        method='get',
+        operation_summary="Listar solicitudes de horas extra pendientes de aprobación",
+        responses={200: HorasExtrasSerializer(many=True)}
+    )
     @action(detail=False, methods=['get'], url_path='pendientes-aprobar')
     def pendientes_aprobar(self, request):
         try:
-            aprobador = Empleado.objects.get(user=request.user)
+            aprobador = Empleado.objects.get(user_id=request.user)
         except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no encontrado'}, status=404)
         departamentos_autorizados = Aprobadores.objects.filter(
@@ -87,41 +129,90 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         )
         solicitudes_filtradas = [
             s for s in solicitudes
-            if s.empleado_solicitador.departamento_del_empleado() in departamentos_autorizados
+            if s.empleado_solicitador.departamento_del_empleado().id in departamentos_autorizados
         ]
         
         serializer = HorasExtrasSerializer(solicitudes_filtradas, many=True)
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], url_path='responder')
+
+    @swagger_auto_schema(
+        method='patch',
+        operation_summary="Responder solicitud de horas extra",
+        operation_description="Permite a un aprobador responder una solicitud de horas extra aprobándola o rechazándola.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['aprobado'],
+            properties={
+                'aprobado': openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description='Indica si la solicitud fue aprobada (true) o rechazada (false).'
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Respuesta exitosa",
+                examples={
+                    "application/json": {"mensaje": "Solicitud respondida correctamente"}
+                }
+            ),
+            400: openapi.Response(
+                description="Error de validación"
+            ),
+            403: openapi.Response(
+                description="Permisos insuficientes"
+            ),
+            404: openapi.Response(
+                description="Solicitud o empleado no encontrado"
+            )
+        }
+    )
+    @action(detail=True, methods=['patch'], url_path='responder')
     def responder_solicitud(self, request, pk=None):
         try:
             solicitud = self.get_object()
-            aprobador = Empleado.objects.get(user=request.user)
+            aprobador = Empleado.objects.get(user_id=request.user)
         except:
             return Response({'error': 'Error localizando solicitud o empleado'}, status=404)
-        
+
         if not solicitud.puede_ser_aprobada_por(aprobador):
             return Response({'error': 'No tiene permisos para aprobar esta solicitud'}, status=403)
-    
-        accion = request.data.get('accion')  # 'aprobar' o 'rechazar'
-        if accion not in ['aprobar', 'rechazar']:
-            return Response({'error': 'Acción inválida'}, status=400)
-        
-        solicitud.aprobado = True if accion == 'aprobar' else False
+
+        aprobado = request.data.get('aprobado')  # debe ser True o False
+
+        if aprobado not in [True, False]:
+            return Response({'error': 'Debe enviar "aprobado": true o false'}, status=400)
+
+        solicitud.aprobado = aprobado
         solicitud.empleado_autorizador = aprobador
         solicitud.fecha_autorizacion = timezone.now()
         solicitud.save()
-        
+
         Notificacion.objects.create(
             empleado=solicitud.empleado_solicitador,
             titulo='Respuesta a tu solicitud de horas extra',
             mensaje=(
                 f'Tu solicitud de {solicitud.cantidad_horas_extra_solicitadas} horas extra '
                 f'ha sido {"aprobada" if solicitud.aprobado else "rechazada"} por {aprobador.nombre} {aprobador.apellidos}.'
-        ),
-    empresa=solicitud.empresa
-)
+            ),
+            empresa=solicitud.empresa
+        )
+
+        return Response({'mensaje': 'Solicitud respondida correctamente'}, status=200)
+    
+    @action(detail=False, methods=['patch'], url_path='autorizar-empresa')
+    def autorizar_empresa_horas_extra(self, request):
+        user = request.user
+        empresa = getattr(user, 'empresa', None)
+        if not empresa:
+            return Response({'error': 'Empresa no encontrada'}, status=400)
+        autoriza = request.data.get('autoriza')
+        if autoriza not in [True, False]:
+            return Response({'error': 'Debe incluir el campo "booleano"'}, status=400)
+        empresa.autorizaHorasExtra = autoriza
+        empresa.save()
+        return Response(status=204)
+
     
 class AprobadoresDeHorasExtraViewSet(viewsets.ModelViewSet):
     serializer_class = AprobadoresDeHorasExtraSereializer

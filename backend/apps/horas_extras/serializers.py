@@ -8,6 +8,7 @@ class HorasExtrasSerializer(serializers.ModelSerializer):
         model = HorasExtras
         exclude = ['empresa']
         
+    
 class AprobadoresDeHorasExtraSereializer(serializers.ModelSerializer):
     class Meta:
         model = Aprobadores
