@@ -24,3 +24,10 @@ class BoletaPagoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BoletaPago
         fields = '__all__'
+
+class GenerarNominaManualSerializer(serializers.Serializer):
+    empresa_id = serializers.IntegerField()
+    empleado_id = serializers.IntegerField()
+    fecha_inicio = serializers.DateField()
+    fecha_fin = serializers.DateField(required=False)
+    cierre_fin_de_mes = serializers.BooleanField(required=False, default=False)

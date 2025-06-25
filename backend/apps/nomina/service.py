@@ -11,11 +11,14 @@ def calcular_nomina(empleado, contrato, estructura, fecha_inicio, fecha_fin, emp
     """
     Calcula la nómina de un empleado para un periodo y crea BoletaPago y DetalleBoletaPago.
     """
-    salario_base = contrato.salario_personalizado or contrato.cargo_departamento.cargo.salario
+    salario_base = contrato.salario_personalizado or contrato.cargo_departamento.id_cargo.salario
     asistencias = Asistencia.objects.filter(
         empleado=empleado, empresa=empresa, fecha__range=(fecha_inicio, fecha_fin)
     )
     horas_trabajadas = sum([(a.horas_trabajadas or 0) for a in asistencias])
+    dias_trabajados = asistencias.count()
+    dias_periodo = (fecha_fin - fecha_inicio).days + 1
+    dias_faltados = dias_periodo - dias_trabajados
     horas_extras = HorasExtras.objects.filter(
         empleado_solicitador=empleado, empresa=empresa,
         fecha_solicitud__range=(fecha_inicio, fecha_fin), aprobado=True
@@ -25,11 +28,20 @@ def calcular_nomina(empleado, contrato, estructura, fecha_inicio, fecha_fin, emp
     contexto = {
         'empleado': empleado,
         'contrato': contrato,
+        'empresa': empresa,
         'salario_base': salario_base,
-        'horas_trabajadas': horas_trabajadas,
-        'total_horas_extra': total_horas_extra,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
         'asistencias': asistencias,
+        'dias_trabajados': dias_trabajados,
+        'dias_periodo': dias_periodo,
+        'dias_faltados': dias_faltados,
+        'horas_trabajadas': horas_trabajadas,
         'horas_extras': horas_extras,
+        'total_horas_extra': total_horas_extra,
+        'horas_extra_totales': Decimal(str(total_horas_extra)),
+        'hoy': date.today(),
+        'Decimal': Decimal,
     }
 
     reglas = estructura.reglas.order_by('secuencia')
@@ -70,7 +82,7 @@ def calcular_nomina(empleado, contrato, estructura, fecha_inicio, fecha_fin, emp
             total_ingresos=total_ingresos,
             total_deducciones=total_deducciones,
             total_neto=total_neto,
-            estado='borrador'
+            estado='validada'
         )
         for d in detalles:
             DetalleBoletaPago.objects.create(
@@ -102,6 +114,14 @@ def generar_nomina_masiva(empresa, fecha_inicio, fecha_fin=None, cierre_fin_de_m
     empleados = Empleado.objects.filter(empresa=empresa)
     boletas = []
     for empleado in empleados:
+        # Validar si ya existe boleta para este empleado, empresa y periodo
+        if BoletaPago.objects.filter(
+            empleado=empleado,
+            empresa=empresa,
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin
+        ).exists():
+            continue  # Ignora y sigue con el siguiente empleado
         contrato = Contrato.objects.filter(
             empleado=empleado,
             empresa=empresa,
@@ -139,6 +159,14 @@ def generar_nomina_manual(empleado, empresa, fecha_inicio, fecha_fin=None, cierr
         fecha_fin = ultimo_dia_mes(fecha_inicio)
     elif not fecha_fin:
         fecha_fin = fecha_inicio
+    # Validar si ya existe boleta para este empleado, empresa y periodo
+    if BoletaPago.objects.filter(
+        empleado=empleado,
+        empresa=empresa,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin
+    ).exists():
+        return 'EXISTE'
     contrato = Contrato.objects.filter(
         empleado=empleado,
         empresa=empresa,
@@ -162,6 +190,35 @@ def generar_nomina_manual(empleado, empresa, fecha_inicio, fecha_fin=None, cierr
         fecha_fin=fecha_fin,
         empresa=empresa
     )
+    if not boleta:
+        return None
     boleta.modo_generacion = 'manual'
     boleta.save()
-    return boleta
+
+    # Obtener detalles simplificados
+    detalles = DetalleBoletaPago.objects.filter(boleta=boleta).order_by('secuencia')
+    detalles_simplificados = [
+        {
+            'nombre': d.nombre,
+            'codigo': d.codigo,
+            'tipo': d.tipo,
+            'monto': str(d.monto),
+            'secuencia': d.secuencia
+        }
+        for d in detalles
+    ]
+
+    return {
+        'id': boleta.id,
+        'empleado': boleta.empleado.id if hasattr(boleta.empleado, 'id') else boleta.empleado,
+        'contrato': boleta.contrato.id if hasattr(boleta.contrato, 'id') else boleta.contrato,
+        'empresa': boleta.empresa.id if hasattr(boleta.empresa, 'id') else boleta.empresa,
+        'fecha_inicio': boleta.fecha_inicio,
+        'fecha_fin': boleta.fecha_fin,
+        'total_ingresos': str(boleta.total_ingresos),
+        'total_deducciones': str(boleta.total_deducciones),
+        'total_neto': str(boleta.total_neto),
+        'estado': boleta.estado,
+        'modo_generacion': boleta.modo_generacion,
+        'detalles': detalles_simplificados
+    }

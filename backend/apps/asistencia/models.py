@@ -8,7 +8,7 @@ from datetime import date
 # Create your models here.
 
 class Asistencia(models.Model):
-    fecha = models.DateField(default=date.today, blank=True)
+    fecha = models.DateField()
     hora_entrada = models.TimeField(null=True, blank=True)
     hora_salida = models.TimeField(null=True, blank=True)
     horas_trabajadas = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)

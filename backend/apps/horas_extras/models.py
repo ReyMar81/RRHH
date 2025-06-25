@@ -33,7 +33,7 @@ class HorasExtras(models.Model):
         on_delete=models.PROTECT,
         related_name='horas_extra_solicitador'
     )
-    fecha_solicitud = models.DateTimeField(default=datetime.now, blank=True, null=True)
+    fecha_solicitud = models.DateTimeField(blank=True, null=True)
     fecha_autorizacion = models.DateTimeField(blank=True, null=True)
     empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
     
