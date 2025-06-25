@@ -130,6 +130,7 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         solicitudes_filtradas = [
             s for s in solicitudes
             if s.empleado_solicitador.departamento_del_empleado().id in departamentos_autorizados
+            and s.empleado_solicitador.user_id != aprobador.user_id
         ]
         
         serializer = HorasExtrasSerializer(solicitudes_filtradas, many=True)
