@@ -3,76 +3,151 @@ from apps.departamento.models import Departamento
 from apps.cargo.models import Cargo
 from apps.cargo_departamento.models import CargoDepartamento
 from apps.contrato.models import Contrato
-from faker import Faker
+from apps.empleado.models import Empleado
+from apps.empresas.service import crear_empresa_con_admin
+from apps.empleado.service import crear_empleado_con_usuario
+from apps.suscripciones.models import Plan
+from django.contrib.auth.models import Group, Permission
 from decimal import Decimal
-from datetime import date, timedelta, time
+from datetime import time, date, timedelta
+from faker import Faker
 import random
 
-from apps.empleado.service import crear_empleado_con_usuario
-from apps.empresas.service import crear_empresa_con_admin
-from apps.suscripciones.models import Plan
-
 class Command(BaseCommand):
-    help = 'Seed para empresa mediana con contratos variados y estado ACTIVO'
+    help = 'Seed para empresas pequeñas con empleados activos y finalizados'
 
     def handle(self, *args, **kwargs):
-        fake = Faker()
-
+        fake = Faker('es_ES')
         plan = Plan.objects.order_by('?').first()
         if not plan:
             self.stdout.write(self.style.ERROR('❌ No hay planes registrados.'))
             return
 
-        data = {
-            'nombre': 'Empresa Mediana',
-            'email_admin': 'admin@empresamediana.com',
-            'direccion': fake.address(),
-            'telefono': fake.phone_number()[:20],
-            'plan_id': plan,
-            'pais': 'BOL',
-            'autorizaHorasExtra': False
-        }
-
-        empresa, user, password = crear_empresa_con_admin(data)
-
-        self.stdout.write(self.style.SUCCESS(f'✅ Empresa: {empresa.nombre}'))
-        self.stdout.write(self.style.WARNING(f'    Usuario admin: {user.username}'))
-        self.stdout.write(self.style.WARNING(f'    Password admin: {password}'))
-
-        deptos_info = [
-            'Recursos Humanos', 'Tecnología', 'Finanzas', 'Marketing',
-            'Ventas', 'Operaciones', 'Logística', 'Atención al Cliente',
-            'Compras', 'Legal'
+        empresas_datos = [
+            {
+                'nombre': 'Textiles El Valle',
+                'email_admin': 'admin@textileselvalle.com',
+                'autorizaHorasExtra': False,
+                'crear_contratos_finalizados': False
+            },
+            {
+                'nombre': 'Industrias Andinas',
+                'email_admin': 'admin@industriasandinas.com',
+                'autorizaHorasExtra': True,
+                'crear_contratos_finalizados': True
+            }
         ]
+
+        resumen_credenciales = []
+
+        for datos in empresas_datos:
+            data_empresa = {
+                'nombre': datos['nombre'],
+                'email_admin': datos['email_admin'],
+                'direccion': fake.address(),
+                'telefono': fake.phone_number()[:20],
+                'plan_id': plan,
+                'pais': 'BOL',
+                'autorizaHorasExtra': True
+            }
+
+            empresa, admin_user, admin_pass = crear_empresa_con_admin(data_empresa)
+            empresa.autorizaHorasExtra = datos['autorizaHorasExtra']
+            empresa.save()
+
+            supervisores, empleados = self.crear_datos_para_empresa(
+                empresa, admin_user, admin_pass, fake, datos['crear_contratos_finalizados']
+            )
+
+            resumen = [f'\n🔐 Credenciales para {empresa.nombre}:']
+            resumen.append(f'    Admin      -> {admin_user.username} / {admin_pass}')
+            if supervisores:
+                sup, user, pwd = supervisores[0]
+                resumen.append(f'    Supervisor -> {user} / {pwd} - {sup.nombre} {sup.apellidos}')
+            if empleados:
+                emp, user, pwd = empleados[0]
+                resumen.append(f'    Empleado   -> {user} / {pwd} - {emp.nombre} {emp.apellidos}')
+            resumen_credenciales.append('\n'.join(resumen))
+
+        self.stdout.write(self.style.SUCCESS('\n===== RESUMEN DE CREDENCIALES ====='))
+        for r in resumen_credenciales:
+            self.stdout.write(self.style.WARNING(r))
+
+    def crear_datos_para_empresa(self, empresa, admin_user, admin_pass, fake, crear_contratos_finalizados):
+        departamentos_nombres = ['Administración', 'Producción', 'Ventas']
         departamentos = {}
-        for nombre in deptos_info:
-            dep = Departamento.objects.create(
-                nombre=nombre,
-                descripcion=fake.sentence(),
+        for nombre in departamentos_nombres:
+            dep = Departamento.objects.create(nombre=nombre, descripcion=fake.sentence(), empresa=empresa)
+            departamentos[nombre] = dep
+
+        grupo_supervisor, _ = Group.objects.get_or_create(name='Supervisor')
+        grupo_empleado, _ = Group.objects.get_or_create(name='Empleado')
+
+        if not grupo_supervisor.permissions.exists():
+            grupo_supervisor.permissions.set(Permission.objects.all())
+
+        if not grupo_empleado.permissions.exists():
+            grupo_empleado.permissions.set(Permission.objects.filter(codename__startswith='view_'))
+
+        cargo_supervisor = Cargo.objects.create(
+            nombre='Supervisor',
+            tipo_pago='mensual',
+            salario=Decimal(7000),
+            receso_diario=Decimal('1.00'),
+            horario_inicio=time(8, 0),
+            horario_fin=time(16, 0),
+            empresa=empresa
+        )
+
+        supervisores_creados = []
+        empleados_creados = []
+        cargos_departamento = []
+
+        for nombre_dep, dep in departamentos.items():
+            genero = random.choice(['M', 'F'])
+            nombre = fake.first_name_male() if genero == 'M' else fake.first_name_female()
+            cuenta_bancaria = '0101' + ''.join([str(random.randint(0, 9)) for _ in range(14)])
+
+            data_sup = {
+                'ci': fake.unique.random_number(digits=8, fix_len=True),
+                'nombre': nombre,
+                'apellidos': fake.last_name(),
+                'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                'genero': genero,
+                'estado_civil': random.choice(['S', 'C', 'V']),
+                'direccion': fake.address(),
+                'telefono': fake.phone_number()[:20],
+                'correo_personal': fake.email(),
+                'cuenta_bancaria': cuenta_bancaria
+            }
+
+            supervisor, username, password = crear_empleado_con_usuario(data_sup, empresa=empresa)
+            supervisor.user_id.groups.add(grupo_supervisor)
+            supervisores_creados.append((supervisor, username, password))
+
+            cargo_dep = CargoDepartamento.objects.create(
+                id_cargo=cargo_supervisor,
+                id_departamento=dep,
                 empresa=empresa
             )
-            departamentos[nombre] = dep
-            self.stdout.write(self.style.SUCCESS(f'✅ Departamento creado: {nombre}'))
+            cargos_departamento.append(cargo_dep)
+
+            Contrato.objects.create(
+                tipo_contrato='INDEFINIDO',
+                fecha_inicio=date.today() - timedelta(days=180),
+                fecha_fin=None,
+                estado='ACTIVO',
+                empleado=supervisor,
+                cargo_departamento=cargo_dep,
+                empresa=empresa
+            )
 
         cargos_info = [
-            ('Analista RRHH', 'mensual', 500, 'Recursos Humanos', 2),
-            ('Reclutador', 'mensual', 450, 'Recursos Humanos', 2),
-            ('Desarrollador Backend', 'mensual', 700, 'Tecnología', 3),
-            ('Desarrollador Frontend', 'mensual', 700, 'Tecnología', 3),
-            ('Soporte TI', 'mensual', 500, 'Tecnología', 2),
-            ('Contador', 'mensual', 600, 'Finanzas', 2),
-            ('Asistente Contable', 'mensual', 450, 'Finanzas', 2),
-            ('Diseñador Gráfico', 'mensual', 550, 'Marketing', 2),
-            ('Community Manager', 'mensual', 500, 'Marketing', 2),
-            ('Ejecutivo de Ventas', 'mensual', 550, 'Ventas', 3),
-            ('Supervisor de Operaciones', 'mensual', 600, 'Operaciones', 2),
-            ('Operario', 'mensual', 400, 'Operaciones', 4),
-            ('Coordinador Logística', 'mensual', 550, 'Logística', 1),
-            ('Asistente Compras', 'mensual', 450, 'Compras', 1),
-            ('Abogado Corporativo', 'mensual', 700, 'Legal', 1)
+            ('Operario', 'mensual', 3500, 'Producción', 2),
+            ('Vendedor', 'mensual', 4000, 'Ventas', 2),
+            ('Asistente Administrativo', 'mensual', 3800, 'Administración', 1)
         ]
 
-        cargo_deps = []
         for nombre, tipo_pago, salario, dep_nombre, cantidad in cargos_info:
             cargo = Cargo.objects.create(
                 nombre=nombre,
@@ -83,54 +158,81 @@ class Command(BaseCommand):
                 horario_fin=time(16, 0),
                 empresa=empresa
             )
-            dep = departamentos[dep_nombre]
             cargo_dep = CargoDepartamento.objects.create(
                 id_cargo=cargo,
-                id_departamento=dep,
+                id_departamento=departamentos[dep_nombre],
                 empresa=empresa
             )
-            cargo_deps.append((cargo_dep, cantidad))
-            self.stdout.write(self.style.SUCCESS(f'✅ Cargo {nombre} relacionado con {dep_nombre}'))
+            cargos_departamento.append(cargo_dep)
 
-        for cargo_dep, cantidad in cargo_deps:
             for _ in range(cantidad):
-                data_empleado = {
+                genero = random.choice(['M', 'F'])
+                nombre_emp = fake.first_name_male() if genero == 'M' else fake.first_name_female()
+                cuenta_bancaria = '0101' + ''.join([str(random.randint(0, 9)) for _ in range(14)])
+
+                data_emp = {
                     'ci': fake.unique.random_number(digits=8, fix_len=True),
-                    'nombre': fake.first_name(),
+                    'nombre': nombre_emp,
                     'apellidos': fake.last_name(),
+                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                    'genero': genero,
+                    'estado_civil': random.choice(['S', 'C', 'V']),
                     'direccion': fake.address(),
                     'telefono': fake.phone_number()[:20],
                     'correo_personal': fake.email(),
+                    'cuenta_bancaria': cuenta_bancaria
                 }
 
-                empleado, username, emp_password = crear_empleado_con_usuario(data_empleado, empresa=empresa)
-
-                self.stdout.write(self.style.SUCCESS(f'✅ Empleado creado: {empleado.nombre} {empleado.apellidos}'))
-                self.stdout.write(self.style.WARNING(f'    Usuario: {username}'))
-                self.stdout.write(self.style.WARNING(f'    Password: {emp_password}'))
-
-                tipo_contrato = random.choices(
-                    ['INDEFINIDO', 'PLAZO FIJO', 'MEDIO TIEMPO', 'PASANTIA'],
-                    weights=[0.5, 0.3, 0.15, 0.05]
-                )[0]
-                estado_contrato = 'ACTIVO'
-                fecha_inicio = date.today() - timedelta(days=random.randint(30, 365))
-
-                if tipo_contrato == 'INDEFINIDO':
-                    fecha_fin = None
-                else:
-                    fecha_fin = fecha_inicio + timedelta(days=random.randint(90, 365))
+                empleado, username, password = crear_empleado_con_usuario(data_emp, empresa=empresa)
+                empleado.user_id.groups.add(grupo_empleado)
+                empleados_creados.append((empleado, username, password))
 
                 Contrato.objects.create(
-                    tipo_contrato=tipo_contrato,
-                    fecha_inicio=fecha_inicio,
-                    fecha_fin=fecha_fin,
-                    estado=estado_contrato,
+                    tipo_contrato='PLAZO FIJO',
+                    fecha_inicio=date.today() - timedelta(days=random.randint(30, 180)),
+                    fecha_fin=date.today() + timedelta(days=random.randint(90, 180)),
+                    estado='ACTIVO',
                     empleado=empleado,
                     cargo_departamento=cargo_dep,
                     empresa=empresa
                 )
 
-                self.stdout.write(self.style.SUCCESS(
-                    f'    Contrato: {tipo_contrato}, Estado: {estado_contrato}, Departamento: {cargo_dep.id_departamento.nombre}, Cargo: {cargo_dep.id_cargo.nombre}'
-                ))
+        if crear_contratos_finalizados:
+            tipos_contrato = ['INDEFINIDO', 'PLAZO FIJO', 'MEDIO TIEMPO', 'PASANTIA']
+            for _ in range(len(empleados_creados)):
+                genero = random.choice(['M', 'F'])
+                nombre_emp = fake.first_name_male() if genero == 'M' else fake.first_name_female()
+                cuenta_bancaria = '0101' + ''.join([str(random.randint(0, 9)) for _ in range(14)])
+
+                data_emp = {
+                    'ci': fake.unique.random_number(digits=8, fix_len=True),
+                    'nombre': nombre_emp,
+                    'apellidos': fake.last_name(),
+                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                    'genero': genero,
+                    'estado_civil': random.choice(['S', 'C', 'V']),
+                    'direccion': fake.address(),
+                    'telefono': fake.phone_number()[:20],
+                    'correo_personal': fake.email(),
+                    'cuenta_bancaria': cuenta_bancaria
+                }
+
+                empleado, username, password = crear_empleado_con_usuario(data_emp, empresa=empresa)
+                empleado.user_id.groups.add(grupo_empleado)
+
+                tipo_contrato = random.choice(tipos_contrato)
+                fecha_inicio = date.today() - timedelta(days=random.randint(365, 1500))
+                fecha_fin = fecha_inicio + timedelta(days=random.randint(180, 720))
+
+                Contrato.objects.create(
+                    tipo_contrato=tipo_contrato,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                    estado='FINALIZADO',
+                    empleado=empleado,
+                    cargo_departamento=random.choice(cargos_departamento),
+                    empresa=empresa,
+                    observaciones='Contrato concluido satisfactoriamente'
+                )
+
+        return supervisores_creados, empleados_creados

@@ -1,7 +1,9 @@
+
 from django.core.management.base import BaseCommand
 from apps.asistencia.models import Asistencia
 from apps.horas_extras.models import HorasExtras, Aprobadores
 from apps.empleado.models import Empleado
+from apps.empresas.models import Empresa
 from datetime import datetime, timedelta, date, time
 from decimal import Decimal
 import random
@@ -9,14 +11,21 @@ from django.db import IntegrityError
 from dateutil.relativedelta import relativedelta
 
 class Command(BaseCommand):
-    help = 'Genera asistencias de los últimos 2 meses con horas extras, atómico y sin duplicados'
+    help = 'Genera asistencias y horas extras para empleados de una empresa específica'
 
     def handle(self, *args, **kwargs):
-        empleados = Empleado.objects.all()
-        empresa = empleados.first().empresa if empleados.exists() else None
+        # ⚠️ Cambiar aquí el nombre exacto de la empresa deseada
+        nombre_empresa = 'Textiles El Valle'
 
-        if not empresa:
-            self.stdout.write(self.style.ERROR('❌ No hay empleados para generar asistencias.'))
+        try:
+            empresa = Empresa.objects.get(nombre=nombre_empresa)
+        except Empresa.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f'❌ Empresa no encontrada: {nombre_empresa}'))
+            return
+
+        empleados = Empleado.objects.filter(empresa=empresa)
+        if not empleados.exists():
+            self.stdout.write(self.style.ERROR(f'❌ No hay empleados en la empresa {nombre_empresa}'))
             return
 
         aprobadores = Aprobadores.objects.filter(empresa=empresa, encargado_de='hora_extra')
@@ -50,7 +59,7 @@ class Command(BaseCommand):
                                 'hora_entrada': hora_entrada,
                                 'hora_salida': hora_salida,
                                 'horas_trabajadas': horas_trabajadas,
-                                'observaciones': 'No debe haber más de una asistencia por día'
+                                'observaciones': ''
                             }
                         )
                         if created:
