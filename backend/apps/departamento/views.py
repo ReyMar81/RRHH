@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from apps.cargo_departamento.models import CargoDepartamento
-from apps.cargo.serializers import SubCargosSerializer
+from apps.cargo.serializers import CargoSerializer
 from .models import Departamento
 from .serializer import DepartamentoSerializers, EmpleadoEstadoAsistenciaSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -29,7 +29,7 @@ class CargosPorDepartamentoView(APIView):
             departamento = Departamento.objects.get(pk=id,empresa=request.user.empresa) ##!AUMENTE ESTO
             relaciones = CargoDepartamento.objects.select_related('id_cargo').filter(id_departamento=departamento)
             cargos = [rel.id_cargo for rel in relaciones]
-            serializer = SubCargosSerializer(cargos, many=True)
+            serializer = CargoSerializer(cargos, many=True)
             return Response(serializer.data)
         except Departamento.DoesNotExist:
             return Response({'error': 'Departamento no encontrado'}, status=404)
