@@ -39,6 +39,7 @@ const Contratos = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [pagina, setPagina] = useState(1);
+    const [busqueda, setBusqueda] = useState(""); // Nuevo estado para el filtro de texto
     const porPagina = 10;
 
     // Obtener el id de la empresa desde localStorage
@@ -183,17 +184,33 @@ const Contratos = () => {
     };
 
     // Calcular contratos a mostrar
+    const contratosFiltrados = contratos.filter((contrato) => {
+        const empleado = empleados.find(e => e.id === contrato.empleado);
+        const nombreCompleto = empleado ? `${empleado.nombre} ${empleado.apellidos}`.toLowerCase() : "";
+        return nombreCompleto.includes(busqueda.toLowerCase());
+    });
+
     const inicio = (pagina - 1) * porPagina;
     const fin = inicio + porPagina;
-    const contratosPagina = contratos.slice(inicio, fin);
-    const totalPaginas = Math.ceil(contratos.length / porPagina);
+    const contratosPagina = contratosFiltrados.slice(inicio, fin);
+    const totalPaginas = Math.ceil(contratosFiltrados.length / porPagina);
 
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Gestión de Contratos</h1>
-            <Button onClick={() => setShowModal(true)}>
-                Crear Contrato
-            </Button>
+            <div className="d-flex justify-content-between mb-3">
+                {/* Filtro de búsqueda */}
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar empleado..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    className="w-50 mx-3"
+                />
+                <Button onClick={() => setShowModal(true)}>
+                    Crear Contrato
+                </Button>
+            </div>
             <Table striped bordered hover responsive className="mt-3">
                 <thead className="table-primary">
                     <tr>
@@ -210,7 +227,9 @@ const Contratos = () => {
                     {contratosPagina.map((contrato) => (
                         <tr key={contrato.id}>
                             <td>
-                                {empleados.find((e) => e.id === contrato.empleado)?.nombre || "—"}
+                                {empleados.find((e) => e.id === contrato.empleado)
+                                    ? `${empleados.find((e) => e.id === contrato.empleado).nombre} ${empleados.find((e) => e.id === contrato.empleado).apellidos}`
+                                    : "—"}
                             </td>
                             <td>
                                 {cargos.find((c) => c.id === contrato.cargo_departamento)?.nombre || "—"}
@@ -289,19 +308,39 @@ const Contratos = () => {
                         {/* Campos del formulario */}
                         <Form.Group className="mb-3">
                             <Form.Label>Empleado</Form.Label>
-                            <Form.Select
-                                name="empleado"
-                                value={formData.empleado}
-                                onChange={handleChange}
+                            <Form.Control
+                                list="empleados-list"
+                                name="empleado_nombre"
+                                value={
+                                    empleados.find(e => String(e.id) === String(formData.empleado))
+                                        ? `${empleados.find(e => String(e.id) === String(formData.empleado)).nombre} ${empleados.find(e => String(e.id) === String(formData.empleado)).apellidos}`
+                                        : formData.empleado_nombre || ""
+                                }
+                                onChange={e => {
+                                    const texto = e.target.value;
+                                    // Buscar si el texto coincide con algún empleado
+                                    const emp = empleados.find(
+                                        emp =>
+                                            `${emp.nombre} ${emp.apellidos}`.toLowerCase() === texto.toLowerCase()
+                                    );
+                                    if (emp) {
+                                        setFormData({ ...formData, empleado: emp.id, empleado_nombre: texto });
+                                    } else {
+                                        setFormData({ ...formData, empleado: "", empleado_nombre: texto });
+                                    }
+                                }}
                                 required
-                            >
-                                <option value="">Seleccione un empleado</option>
+                                placeholder="Buscar o seleccionar empleado..."
+                                autoComplete="off"
+                            />
+                            <datalist id="empleados-list">
                                 {empleados.map((empleado) => (
-                                    <option key={empleado.id} value={empleado.id}>
-                                        {empleado.nombre}
-                                    </option>
+                                    <option
+                                        key={empleado.id}
+                                        value={`${empleado.nombre} ${empleado.apellidos}`}
+                                    />
                                 ))}
-                            </Form.Select>
+                            </datalist>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Cargo</Form.Label>

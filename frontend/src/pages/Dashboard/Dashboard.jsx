@@ -26,7 +26,7 @@ const Dashboard = () => {
             {/* Sidebar */}
             <nav className="sidebar">
                 <div className="sidebar-header p-3 d-flex justify-content-between align-items-center">
-                    <h5 className="m-0 text-white">RRHH</h5>
+                    <h5 className="m-0 text-white">HRM System</h5>
                     <button
                         className="btn btn-sm btn-light d-md-none"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -45,6 +45,12 @@ const Dashboard = () => {
                         <Link to="asistencia" className="nav-link text-white p-3 d-flex align-items-center">
                             <i className="bi bi-calendar-check"></i>
                             <span className="ms-2">Asistencia</span>
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link to="contratos" className="nav-link text-white p-3 d-flex align-items-center">
+                            <i className="bi bi-file-earmark-text"></i>
+                            <span className="ms-2">Contratos</span>
                         </Link>
                     </li>
                     {/* Submenú Departamentos */}

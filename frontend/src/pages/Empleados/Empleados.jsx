@@ -25,6 +25,7 @@ const Empleados = () => {
     const [showModal, setShowModal] = useState(false);
     const [paginaActual, setPaginaActual] = useState(1);
     const [totalPaginas, setTotalPaginas] = useState(1);
+    const [busqueda, setBusqueda] = useState(""); // Nuevo estado para el filtro de texto
 
     // Opciones estáticas para género y estado civil
     const generoChoices = [
@@ -72,20 +73,24 @@ const Empleados = () => {
         }
     };
 
-    // Filtrar empleados por departamento
-    const filterEmpleadosByDepartamento = () => {
-        if (!selectedDepartamento) {
-            setFilteredEmpleados(empleados);
-        } else {
-            const empleadosFiltrados = empleados.filter((empleado) =>
+    // Filtrar empleados por departamento y búsqueda
+    const filterEmpleados = () => {
+        let empleadosFiltrados = empleados;
+        if (selectedDepartamento) {
+            empleadosFiltrados = empleadosFiltrados.filter((empleado) =>
                 contratos.some(
                     (contrato) =>
                         contrato.empleado === empleado.id &&
                         contrato.cargo_departamento === parseInt(selectedDepartamento)
                 )
             );
-            setFilteredEmpleados(empleadosFiltrados);
         }
+        if (busqueda.trim() !== "") {
+            empleadosFiltrados = empleadosFiltrados.filter((empleado) =>
+                `${empleado.nombre} ${empleado.apellidos}`.toLowerCase().includes(busqueda.toLowerCase())
+            );
+        }
+        setFilteredEmpleados(empleadosFiltrados);
     };
 
     // Manejar cambios en el filtro de departamento
@@ -167,10 +172,10 @@ const Empleados = () => {
         fetchContratos();
     }, []);
 
-    // Actualizar empleados filtrados cuando cambie el departamento seleccionado o los empleados
+    // Actualizar empleados filtrados cuando cambie el departamento, empleados o búsqueda
     useEffect(() => {
-        filterEmpleadosByDepartamento();
-    }, [selectedDepartamento, empleados]);
+        filterEmpleados();
+    }, [selectedDepartamento, empleados, busqueda]);
 
     // Genera los ítems de paginación estilo Google
     const getPaginationItems = (pagina, totalPaginas) => {
@@ -205,6 +210,14 @@ const Empleados = () => {
                         </option>
                     ))}
                 </Form.Select>
+                {/* Filtro de búsqueda */}
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar empleado..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    className="w-50 mx-3"
+                />
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Empleado
                 </Button>

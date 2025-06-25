@@ -32,6 +32,7 @@ const Documentos = () => {
         tipo_id: "",
         categoria_id: "",
         empleado_id: "",
+        empleado_nombre: "", // <-- Nuevo campo auxiliar
         contrato_id: "",
     });
     const [file, setFile] = useState(null); // Estado para el archivo
@@ -41,6 +42,7 @@ const Documentos = () => {
     const [message, setMessage] = useState("");
     const [uploading, setUploading] = useState(false); // Estado para la carga del archivo
     const [pagina, setPagina] = useState(1);
+    const [busqueda, setBusqueda] = useState(""); // Nuevo estado para el filtro de texto
     const porPagina = 10;
 
     const navigate = useNavigate();
@@ -183,6 +185,7 @@ const Documentos = () => {
             tipo_id: "",
             categoria_id: "",
             empleado_id: "",
+            empleado_nombre: "", // <-- Nuevo campo auxiliar
             contrato_id: "",
         });
         setFile(null);
@@ -200,15 +203,28 @@ const Documentos = () => {
     }, []);
 
     // Calcular documentos a mostrar
+    const documentosFiltrados = documentos.filter((doc) => {
+        const empleado = empleados.find(e => e.id === doc.empleado_id);
+        const nombreCompleto = empleado ? `${empleado.nombre} ${empleado.apellidos}`.toLowerCase() : "";
+        return nombreCompleto.includes(busqueda.toLowerCase());
+    });
+
     const inicio = (pagina - 1) * porPagina;
     const fin = inicio + porPagina;
-    const documentosPagina = documentos.slice(inicio, fin);
-    const totalPaginas = Math.ceil(documentos.length / porPagina);
+    const documentosPagina = documentosFiltrados.slice(inicio, fin);
+    const totalPaginas = Math.ceil(documentosFiltrados.length / porPagina);
 
     return (
         <div className="container mt-4">
             <h1 className="mb-4 ">Gestión de Documentos</h1>
             <div className="d-flex justify-content-between mb-3">
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar empleado..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    className="w-50 mx-3"
+                />
                 <Button onClick={() => setShowModal(true)}>
                     Subir Documento
                 </Button>
@@ -239,7 +255,9 @@ const Documentos = () => {
                             <td>{tipos.find((tipo) => tipo.id === doc.tipo_id)?.nombre || "—"}</td>
                             <td>{categorias.find((cat) => cat.id === doc.categoria_id)?.nombre || "—"}</td>
                             <td>
-                                {empleados.find((emp) => emp.id === doc.empleado_id)?.nombre || "—"}
+                                {empleados.find((emp) => emp.id === doc.empleado_id)
+                                    ? `${empleados.find((emp) => emp.id === doc.empleado_id).nombre} ${empleados.find((emp) => emp.id === doc.empleado_id).apellidos}`
+                                    : "—"}
                             </td>
                             <td>
                                 {contratos.find((con) => con.id === doc.contrato_id)?.tipo_contrato || "—"}
@@ -356,19 +374,39 @@ const Documentos = () => {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Empleado</Form.Label>
-                            <Form.Select
-                                name="empleado_id"
-                                value={formData.empleado_id}
-                                onChange={handleChange}
+                            <Form.Control
+                                list="empleados-list"
+                                name="empleado_nombre"
+                                value={
+                                    empleados.find(e => String(e.id) === String(formData.empleado_id))
+                                        ? `${empleados.find(e => String(e.id) === String(formData.empleado_id)).nombre} ${empleados.find(e => String(e.id) === String(formData.empleado_id)).apellidos}`
+                                        : formData.empleado_nombre || ""
+                                }
+                                onChange={e => {
+                                    const texto = e.target.value;
+                                    // Buscar si el texto coincide con algún empleado
+                                    const emp = empleados.find(
+                                        emp =>
+                                            `${emp.nombre} ${emp.apellidos}`.toLowerCase() === texto.toLowerCase()
+                                    );
+                                    if (emp) {
+                                        setFormData({ ...formData, empleado_id: emp.id, empleado_nombre: texto });
+                                    } else {
+                                        setFormData({ ...formData, empleado_id: "", empleado_nombre: texto });
+                                    }
+                                }}
                                 required
-                            >
-                                <option value="">Seleccione un empleado</option>
+                                placeholder="Buscar o seleccionar empleado..."
+                                autoComplete="off"
+                            />
+                            <datalist id="empleados-list">
                                 {empleados.map((empleado) => (
-                                    <option key={empleado.id} value={empleado.id}>
-                                        {empleado.nombre} {empleado.apellidos}
-                                    </option>
+                                    <option
+                                        key={empleado.id}
+                                        value={`${empleado.nombre} ${empleado.apellidos}`}
+                                    />
                                 ))}
-                            </Form.Select>
+                            </datalist>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Contrato</Form.Label>

@@ -14,6 +14,7 @@ const Nomina = () => {
         fecha_inicio: "",
         fecha_fin: "",
     });
+    const [busqueda, setBusqueda] = useState(""); // Nuevo filtro de texto
 
     const empresaId = localStorage.getItem("empresa_id");
 
@@ -82,19 +83,31 @@ const Nomina = () => {
         setGenerando(false);
     };
 
+    // Filtrar empleados por nombre/apellido
+    const empleadosFiltrados = empleados.filter(emp =>
+        `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Nómina</h1>
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
             <div className="d-flex mb-3 gap-2">
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar empleado..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    className="w-50 mx-3"
+                />
                 <Form.Select
                     value={empleadoSeleccionado}
                     onChange={e => setEmpleadoSeleccionado(e.target.value)}
                     style={{ maxWidth: 300 }}
                 >
                     <option value="">Selecciona un empleado</option>
-                    {empleados.map(emp => (
+                    {empleadosFiltrados.map(emp => (
                         <option key={emp.id} value={emp.id}>
                             {emp.nombre} {emp.apellidos}
                         </option>
