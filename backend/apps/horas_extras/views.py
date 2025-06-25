@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_spectacular.utils import extend_schema
 
 
 # Create your views here.
@@ -24,25 +25,25 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return HorasExtras.objects.filter(empresa=self.request.user.empresa)
-    @swagger_auto_schema(
-        method='post',
-        operation_summary="Solicitar horas extra",
-        request_body=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                required=["cantidad_horas_extra_solicitadas", "motivo"],
-                properties={
-                "cantidad_horas_extra_solicitadas": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    example="2:30",
-                    description="Cantidad de horas solicitadas (formato HH:MM o decimal)"
-                ),
-                "motivo": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    example="Resolviendo bug crítico",
-                    description="Motivo de la solicitud"
-                )
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "cantidad_horas_extra_solicitadas": {
+                        "type": "string",
+                        "example": "2:30",
+                        "description": "Cantidad de horas solicitadas (formato HH:MM o decimal)"
+                    },
+                    "motivo": {
+                        "type": "string",
+                        "example": "Resolviendo bug crítico",
+                        "description": "Motivo de la solicitud"
+                    }
+                },
+                "required": ["cantidad_horas_extra_solicitadas", "motivo"]
             }
-        ),
+        },
         responses={
             201: openapi.Response(
                 description="Solicitud registrada correctamente",
@@ -52,12 +53,11 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
                     }
                 }
             ),
-            400: "Datos inválidos",
-            404: "Empleado no registrado"
-        }
+            400: openapi.Response(description="Datos inválidos"),
+            404: openapi.Response(description="Empleado no registrado")
+        },
+        summary="Solicitar horas extra"
     )
-
-    
     @action(detail=False, methods=['post'], url_path='solicitar')
     def solicitar_horas_extra(self, request):
         try:
@@ -136,20 +136,20 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
         serializer = HorasExtrasSerializer(solicitudes_filtradas, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        method='patch',
-        operation_summary="Responder solicitud de horas extra",
-        operation_description="Permite a un aprobador responder una solicitud de horas extra aprobándola o rechazándola.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['aprobado'],
-            properties={
-                'aprobado': openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN,
-                    description='Indica si la solicitud fue aprobada (true) o rechazada (false).'
-                )
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "aprobado": {
+                        "type": "boolean",
+                        "description": "Indica si la solicitud fue aprobada (true) o rechazada (false).",
+                        "example": True
+                    }
+                },
+                "required": ["aprobado"]
             }
-        ),
+        },
         responses={
             200: openapi.Response(
                 description="Respuesta exitosa",
@@ -157,16 +157,11 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
                     "application/json": {"mensaje": "Solicitud respondida correctamente"}
                 }
             ),
-            400: openapi.Response(
-                description="Error de validación"
-            ),
-            403: openapi.Response(
-                description="Permisos insuficientes"
-            ),
-            404: openapi.Response(
-                description="Solicitud o empleado no encontrado"
-            )
-        }
+            400: openapi.Response(description="Error de validación"),
+            403: openapi.Response(description="Permisos insuficientes"),
+            404: openapi.Response(description="Solicitud o empleado no encontrado")
+        },
+        summary="Responder solicitud de horas extra"
     )
     @action(detail=True, methods=['patch'], url_path='responder')
     def responder_solicitud(self, request, pk=None):
@@ -234,7 +229,7 @@ def strAHoras(horas:str):
         mint = int(partes[1]) if len(partes) > 1 else 0
         return timedelta(hours=hora, minutes=mint)
     except:
-        raise ValueError('Formato invalido, debe ser HH:MM')     
-    
-    
-    
+        raise ValueError('Formato invalido, debe ser HH:MM')
+
+
+
