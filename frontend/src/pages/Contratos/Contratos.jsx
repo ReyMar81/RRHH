@@ -251,13 +251,13 @@ const Contratos = () => {
                                 >
                                     <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
                                 </Button>
-                                <Button
+                                {/* <Button
                                     variant="link"
                                     className="p-0"
                                     onClick={() => generarPDF(contrato)}
                                 >
                                     <i className="bi bi-file-earmark-pdf" style={{ fontSize: "1.5rem" }}></i>
-                                </Button>
+                                </Button> */}
                             </td>
                         </tr>
                     ))}
