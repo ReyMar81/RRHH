@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Alert, Pagination } from "react-bootstrap";
+import { Table, Alert, Pagination, Form, Row, Col } from "react-bootstrap";
 
 // Genera los ítems de paginación estilo Google
 const getPaginationItems = (pagina, totalPaginas) => {
@@ -21,14 +21,11 @@ const getPaginationItems = (pagina, totalPaginas) => {
 
 const HistorialHorasExtra = () => {
     const [historial, setHistorial] = useState([]);
+    const [empleados, setEmpleados] = useState([]);
     const [error, setError] = useState("");
-    // PAGINACIÓN
     const [pagina, setPagina] = useState(1);
+    const [busquedaSolicito, setBusquedaSolicito] = useState(""); // Nuevo filtro para "Solicitó"
     const porPagina = 10;
-    const inicio = (pagina - 1) * porPagina;
-    const fin = inicio + porPagina;
-    const historialPagina = historial.slice(inicio, fin);
-    const totalPaginas = Math.ceil(historial.length / porPagina);
 
     useEffect(() => {
         const fetchHistorial = async () => {
@@ -40,8 +37,34 @@ const HistorialHorasExtra = () => {
                 setError("Error al cargar el historial.");
             }
         };
+        const fetchEmpleados = async () => {
+            try {
+                const res = await apiClient.get("empleados/");
+                setEmpleados(res.data);
+            } catch (err) {}
+        };
         fetchHistorial();
+        fetchEmpleados();
     }, []);
+
+    // Obtener nombre completo por id
+    const getEmpleadoNombre = (id) => {
+        const emp = empleados.find(e => e.id === id);
+        return emp ? `${emp.nombre} ${emp.apellidos}` : "—";
+    };
+
+    // Filtro por nombre de quien solicitó
+    const historialFiltrado = historial.filter((h) => {
+        if (!busquedaSolicito.trim()) return true;
+        const solicitador = empleados.find(e => e.id === h.empleado_solicitador);
+        const nombreCompleto = solicitador ? `${solicitador.nombre} ${solicitador.apellidos}`.toLowerCase() : "";
+        return nombreCompleto.includes(busquedaSolicito.toLowerCase());
+    });
+
+    const inicio = (pagina - 1) * porPagina;
+    const fin = inicio + porPagina;
+    const historialPagina = historialFiltrado.slice(inicio, fin);
+    const totalPaginas = Math.ceil(historialFiltrado.length / porPagina);
 
     // Formatear fecha
     const formatFecha = (fecha) => {
@@ -67,6 +90,19 @@ const HistorialHorasExtra = () => {
         <div className="container mt-4">
             <h2 className="mb-4">Historial de Horas Extra</h2>
             {error && <Alert variant="danger">{error}</Alert>}
+
+            <Row className="mb-3">
+                <Col md={6}>
+                    <Form.Control
+                        type="text"
+                        placeholder="Buscar por quien solicitó..."
+                        value={busquedaSolicito}
+                        onChange={e => setBusquedaSolicito(e.target.value)}
+                        className="w-100"
+                    />
+                </Col>
+            </Row>
+
             <Table striped bordered hover>
                 <thead className="table-primary">
                     <tr>
@@ -74,12 +110,14 @@ const HistorialHorasExtra = () => {
                         <th>Aprobado</th>
                         <th>Motivo</th>
                         <th>Fecha solicitud</th>
+                        <th>Solicitó</th>
+                        <th>Autorizó</th>
                     </tr>
                 </thead>
                 <tbody>
                     {historialPagina.length === 0 ? (
                         <tr>
-                            <td colSpan={4} className="text-center text-muted">
+                            <td colSpan={6} className="text-center text-muted">
                                 No hay historial de horas extra.
                             </td>
                         </tr>
@@ -90,6 +128,8 @@ const HistorialHorasExtra = () => {
                                 <td>{formatAprobado(h.aprobado)}</td>
                                 <td>{h.motivo}</td>
                                 <td>{formatFecha(h.fecha_solicitud)}</td>
+                                <td>{getEmpleadoNombre(h.empleado_solicitador)}</td>
+                                <td>{h.empleado_autorizador ? getEmpleadoNombre(h.empleado_autorizador) : "—"}</td>
                             </tr>
                         ))
                     )}
