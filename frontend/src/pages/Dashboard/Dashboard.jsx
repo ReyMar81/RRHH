@@ -6,6 +6,9 @@ import './Dashboard.css'; // Archivo CSS para estilos personalizados
 
 const Dashboard = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [departamentosOpen, setDepartamentosOpen] = useState(false); // Nuevo estado
+    const [documentosOpen, setDocumentosOpen] = useState(false); // Añade este estado junto a los otros
+    const [nominaOpen, setNominaOpen] = useState(false); // Añade este estado junto a los otros
     const navigate = useNavigate();
 
     // Manejar el cierre de sesión
@@ -38,28 +41,112 @@ const Dashboard = () => {
                         </Link>
                     </li>
                     <li className="nav-item">
-                        <Link to="departamentos" className="nav-link text-white p-3 d-flex align-items-center">
-                            <i className="bi bi-building"></i>
-                            <span className="ms-2">Departamentos</span>
-                        </Link>
-                    </li>
-                    <li className="nav-item">
-                        <Link to="documentos" className="nav-link text-white p-3 d-flex align-items-center">
-                            <i className="bi bi-folder"></i>
-                            <span className="ms-2">Documentos</span>
-                        </Link>
-                    </li>
-                    <li className="nav-item">
                         <Link to="asistencia" className="nav-link text-white p-3 d-flex align-items-center">
                             <i className="bi bi-calendar-check"></i>
                             <span className="ms-2">Asistencia</span>
                         </Link>
                     </li>
+                    {/* Submenú Departamentos */}
                     <li className="nav-item">
-                        <Link to="contratos" className="nav-link text-white p-3 d-flex align-items-center">
-                            <i className="bi bi-file-earmark-text"></i>
-                            <span className="ms-2">Contratos</span>
-                        </Link>
+                        <button
+                            className="nav-link text-white p-3 d-flex align-items-center w-100 bg-transparent border-0"
+                            style={{ textAlign: "left" }}
+                            onClick={() => setDepartamentosOpen(!departamentosOpen)}
+                        >
+                            <i className="bi bi-building"></i>
+                            <span className="ms-2 flex-grow-1">Departamentos</span>
+                            <i className={`bi ms-auto ${departamentosOpen ? "bi-caret-down-fill" : "bi-caret-right-fill"}`}></i>
+                        </button>
+                        {departamentosOpen && (
+                            <ul className="nav flex-column ms-4">
+                                <li className="nav-item">
+                                    <Link to="departamentos" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-list-ul"></i>
+                                        <span className="ms-2">Departamentos</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="cargos" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-person-workspace"></i>
+                                        <span className="ms-2">Cargos</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="cargos_departamentos" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-diagram-3"></i>
+                                        <span className="ms-2">Cargo Departamento</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
+                    </li>
+                    {/* Fin Submenú Departamentos */}
+                    <li className="nav-item">
+                        <button
+                            className="nav-link text-white p-3 d-flex align-items-center w-100 bg-transparent border-0"
+                            style={{ textAlign: "left" }}
+                            onClick={() => setDocumentosOpen(!documentosOpen)}
+                        >
+                            <i className="bi bi-folder"></i>
+                            <span className="ms-2 flex-grow-1">Documentos</span>
+                            <i className={`bi ms-auto ${documentosOpen ? "bi-caret-down-fill" : "bi-caret-right-fill"}`}></i>
+                        </button>
+                        {documentosOpen && (
+                            <ul className="nav flex-column ms-4">
+                                <li className="nav-item">
+                                    <Link to="documentos" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-folder2-open"></i>
+                                        <span className="ms-2">Documentos</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="categorias" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-tags"></i>
+                                        <span className="ms-2">Categorías</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="tipos" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-bookmark"></i>
+                                        <span className="ms-2">Tipos</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
+                    </li>
+
+                    <li className="nav-item">
+                        <button
+                            className="nav-link text-white p-3 d-flex align-items-center w-100 bg-transparent border-0"
+                            style={{ textAlign: "left" }}
+                            onClick={() => setNominaOpen(!nominaOpen)}
+                        >
+                            <i className="bi bi-cash-coin"></i>
+                            <span className="ms-2 flex-grow-1">Nómina</span>
+                            <i className={`bi ms-auto ${nominaOpen ? "bi-caret-down-fill" : "bi-caret-right-fill"}`}></i>
+                        </button>
+                        {nominaOpen && (
+                            <ul className="nav flex-column ms-4">
+                                <li className="nav-item">
+                                    <Link to="nomina" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-cash-stack"></i>
+                                        <span className="ms-2">Nómina</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="estructura" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-diagram-2"></i>
+                                        <span className="ms-2">Estructura</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="reglas" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-gear"></i>
+                                        <span className="ms-2">Reglas</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
                     </li>
                     <li className="nav-item">
                         <Link to="perfil" className="nav-link text-white p-3 d-flex align-items-center">
@@ -76,7 +163,6 @@ const Dashboard = () => {
             </nav>
 
             {/* Content Wrapper */}
-
             <div className="content-wrapper flex-grow-1">
                 <Container fluid className="p-4">
                     {/* Main Content */}

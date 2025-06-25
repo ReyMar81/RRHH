@@ -20,6 +20,9 @@ import LoginAdmin from './pages/Login/LoginAdmin';
 import Empresas from './pages/GestionAdmin/Empresas';
 import Bitacora from './pages/GestionAdmin/Bitacora';
 import BitacoraEmpresa from './pages/GestionAdmin/BitacoraEmpresa';
+import Reglas from './pages/Nomina/Reglas';
+import Estructura from './pages/Nomina/Estructura';
+import Nomina from './pages/Nomina/Nomina';
 
 function App() {
   return (
@@ -46,6 +49,9 @@ function App() {
           <Route path="cargos_departamentos" element={<CargosDepartamentos />} />
           <Route path="perfil" element={<Perfil />} />
           <Route path="bitacora" element={<Bitacora />} />
+          <Route path="reglas" element={<Reglas />} />
+          <Route path="estructura" element={<Estructura />} />
+          <Route path="nomina" element={<Nomina />} />
 
         </Route>
         <Route path="/login" element={<ThemeProvider><Login /> </ThemeProvider>}/>

@@ -18,6 +18,7 @@ const Empleados = () => {
         estado_civil: "",
         telefono: "",
         correo_personal: "",
+        cuenta_bancaria: "", // Nuevo campo
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -152,6 +153,7 @@ const Empleados = () => {
             estado_civil: "",
             telefono: "",
             correo_personal: "",
+            cuenta_bancaria: "", // Nuevo campo
         });
     };
 
@@ -347,6 +349,22 @@ const Empleados = () => {
                                         value={formData.correo_personal}
                                         onChange={handleChange}
                                         required
+                                    />
+                                </Form.Group>
+                            </div>
+                        </div>
+                        <div className="row">
+                        </div>
+                        <div className="row">
+                            <div className="col-md-12">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Cuenta Bancaria</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="cuenta_bancaria"
+                                        placeholder="Cuenta Bancaria"
+                                        value={formData.cuenta_bancaria}
+                                        onChange={handleChange}
                                     />
                                 </Form.Group>
                             </div>

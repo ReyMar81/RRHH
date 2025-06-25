@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
 import { Table, Button, Modal, Form } from "react-bootstrap";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Contratos = () => {
     const [contratos, setContratos] = useState([]);
@@ -141,6 +143,26 @@ const Contratos = () => {
         fetchCargos();
     }, []);
 
+    const generarPDF = (contrato) => {
+        const doc = new jsPDF();
+        doc.text("Contrato de Trabajo", 10, 10);
+        autoTable(doc, {
+            startY: 20,
+            head: [["Campo", "Valor"]],
+            body: [
+                ["Empleado", empleados.find(e => e.id === contrato.empleado)?.nombre || ""],
+                ["Cargo", cargos.find(c => c.id === contrato.cargo_departamento)?.nombre || ""],
+                ["Tipo", contrato.tipo_contrato],
+                ["Estado", contrato.estado],
+                ["Fecha Inicio", contrato.fecha_inicio],
+                ["Fecha Fin", contrato.fecha_fin || "—"],
+                ["Salario", contrato.salario_personalizado],
+                ["Observaciones", contrato.observaciones],
+            ],
+        });
+        doc.save(`Contrato_${contrato.id}.pdf`);
+    };
+
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Gestión de Contratos</h1>
@@ -184,6 +206,13 @@ const Contratos = () => {
                                     }}
                                 >
                                     <i className="bi bi-three-dots" style={{ fontSize: "1.5rem" }}></i>
+                                </Button>
+                                <Button
+                                    variant="link"
+                                    className="p-0"
+                                    onClick={() => generarPDF(contrato)}
+                                >
+                                    <i className="bi bi-file-earmark-pdf" style={{ fontSize: "1.5rem" }}></i>
                                 </Button>
                             </td>
                         </tr>
