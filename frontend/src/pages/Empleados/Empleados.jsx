@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Modal, Button, Form, Table } from "react-bootstrap";
+import { Modal, Button, Form, Table, Pagination } from "react-bootstrap";
 
 const Empleados = () => {
     const [empleados, setEmpleados] = useState([]);
@@ -23,6 +23,8 @@ const Empleados = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [totalPaginas, setTotalPaginas] = useState(1);
 
     // Opciones estáticas para género y estado civil
     const generoChoices = [
@@ -44,6 +46,7 @@ const Empleados = () => {
         try {
             const response = await apiClient.get(`empleados/?empresa_id=${empresaId}`);
             setEmpleados(response.data);
+            setTotalPaginas(Math.ceil(response.data.length / 10)); // Suponiendo 10 empleados por página
         } catch (error) {
             console.error("Error al obtener empleados:", error);
         }
@@ -169,6 +172,23 @@ const Empleados = () => {
         filterEmpleadosByDepartamento();
     }, [selectedDepartamento, empleados]);
 
+    // Genera los ítems de paginación estilo Google
+    const getPaginationItems = (pagina, totalPaginas) => {
+        let items = [];
+        if (totalPaginas <= 7) {
+            for (let i = 1; i <= totalPaginas; i++) items.push(i);
+        } else {
+            if (pagina <= 4) {
+                items = [1, 2, 3, 4, 5, "...", totalPaginas];
+            } else if (pagina >= totalPaginas - 3) {
+                items = [1, "...", totalPaginas - 4, totalPaginas - 3, totalPaginas - 2, totalPaginas - 1, totalPaginas];
+            } else {
+                items = [1, "...", pagina - 1, pagina, pagina + 1, "...", totalPaginas];
+            }
+        }
+        return items;
+    };
+
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Gestión de Empleados</h1>
@@ -199,7 +219,7 @@ const Empleados = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredEmpleados.map((empleado) => (
+                    {filteredEmpleados.slice((paginaActual - 1) * 10, paginaActual * 10).map((empleado) => (
                         <tr key={empleado.id}>
                             <td>{empleado.nombre}</td>
                             <td>{empleado.apellidos}</td>
@@ -222,6 +242,29 @@ const Empleados = () => {
                     ))}
                 </tbody>
             </Table>
+
+            {/* Paginación */}
+            <div className="d-flex justify-content-center mb-4">
+                <Pagination>
+                    <Pagination.First onClick={() => setPaginaActual(1)} />
+                    <Pagination.Prev onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))} />
+                    {getPaginationItems(paginaActual, totalPaginas).map((item, index) =>
+                        item === "..." ? (
+                            <Pagination.Ellipsis key={index} />
+                        ) : (
+                            <Pagination.Item
+                                key={index}
+                                active={item === paginaActual}
+                                onClick={() => setPaginaActual(item)}
+                            >
+                                {item}
+                            </Pagination.Item>
+                        )
+                    )}
+                    <Pagination.Next onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))} />
+                    <Pagination.Last onClick={() => setPaginaActual(totalPaginas)} />
+                </Pagination>
+            </div>
 
             {/* Modal para crear/editar empleados */}
             <Modal

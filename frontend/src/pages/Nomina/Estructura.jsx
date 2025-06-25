@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Button, Modal, Form } from "react-bootstrap";
+import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
 
 const TIPOS_CONTRATO = [
     { value: "INDEFINIDO", label: "Indefinido" },
@@ -8,6 +8,23 @@ const TIPOS_CONTRATO = [
     { value: "MEDIO TIEMPO", label: "Medio Tiempo" },
     { value: "PASANTIA", label: "Pasantía" },
 ];
+
+// Genera los ítems de paginación estilo Google
+const getPaginationItems = (pagina, totalPaginas) => {
+    let items = [];
+    if (totalPaginas <= 7) {
+        for (let i = 1; i <= totalPaginas; i++) items.push(i);
+    } else {
+        if (pagina <= 4) {
+            items = [1, 2, 3, 4, 5, "...", totalPaginas];
+        } else if (pagina >= totalPaginas - 3) {
+            items = [1, "...", totalPaginas - 4, totalPaginas - 3, totalPaginas - 2, totalPaginas - 1, totalPaginas];
+        } else {
+            items = [1, "...", pagina - 1, pagina, pagina + 1, "...", totalPaginas];
+        }
+    }
+    return items;
+};
 
 const Estructura = () => {
     const [estructuras, setEstructuras] = useState([]);
@@ -20,6 +37,8 @@ const Estructura = () => {
         tipo_contrato: "",
         activa: true,
     });
+    const [pagina, setPagina] = useState(1);
+    const porPagina = 10;
 
     const empresaId = localStorage.getItem("empresa_id");
 
@@ -104,6 +123,12 @@ const Estructura = () => {
         setShowModal(true);
     };
 
+    // Calcular estructuras a mostrar
+    const inicio = (pagina - 1) * porPagina;
+    const fin = inicio + porPagina;
+    const estructurasPagina = estructuras.slice(inicio, fin);
+    const totalPaginas = Math.ceil(estructuras.length / porPagina);
+
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Estructuras Salariales</h1>
@@ -121,7 +146,7 @@ const Estructura = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {estructuras.map((estructura) => (
+                    {estructurasPagina.map((estructura) => (
                         <tr key={estructura.id}>
                             <td>{estructura.nombre}</td>
                             <td>{estructura.descripcion}</td>
@@ -142,6 +167,32 @@ const Estructura = () => {
                     ))}
                 </tbody>
             </Table>
+            {/* Paginación estética */}
+            {totalPaginas > 1 && (
+                <Pagination className="justify-content-center">
+                    <Pagination.Prev
+                        onClick={() => setPagina(pagina - 1)}
+                        disabled={pagina === 1}
+                    />
+                    {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
+                        item === "..." ? (
+                            <Pagination.Ellipsis key={idx} disabled />
+                        ) : (
+                            <Pagination.Item
+                                key={item}
+                                active={pagina === item}
+                                onClick={() => setPagina(item)}
+                            >
+                                {item}
+                            </Pagination.Item>
+                        )
+                    )}
+                    <Pagination.Next
+                        onClick={() => setPagina(pagina + 1)}
+                        disabled={pagina === totalPaginas}
+                    />
+                </Pagination>
+            )}
 
             {/* Modal para crear/editar estructura */}
             <Modal

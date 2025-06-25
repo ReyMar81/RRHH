@@ -9,6 +9,7 @@ const Dashboard = () => {
     const [departamentosOpen, setDepartamentosOpen] = useState(false); // Nuevo estado
     const [documentosOpen, setDocumentosOpen] = useState(false); // Añade este estado junto a los otros
     const [nominaOpen, setNominaOpen] = useState(false); // Añade este estado junto a los otros
+    const [horasExtraOpen, setHorasExtraOpen] = useState(false); // Agrega este estado junto a los otros
     const navigate = useNavigate();
 
     // Manejar el cierre de sesión
@@ -148,6 +149,41 @@ const Dashboard = () => {
                             </ul>
                         )}
                     </li>
+                    {/* Submenú Horas Extra */}
+                    <li className="nav-item">
+                        <button
+                            className="nav-link text-white p-3 d-flex align-items-center w-100 bg-transparent border-0"
+                            style={{ textAlign: "left" }}
+                            onClick={() => setHorasExtraOpen(!horasExtraOpen)}
+                        >
+                            <i className="bi bi-clock-history"></i>
+                            <span className="ms-2 flex-grow-1">Horas Extra</span>
+                            <i className={`bi ms-auto ${horasExtraOpen ? "bi-caret-down-fill" : "bi-caret-right-fill"}`}></i>
+                        </button>
+                        {horasExtraOpen && (
+                            <ul className="nav flex-column ms-4">
+                                <li className="nav-item">
+                                    <Link to="aprobadores" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-person-check"></i>
+                                        <span className="ms-2">Aprobadores</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="horas_extra_pendientes" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-hourglass-split"></i>
+                                        <span className="ms-2">Pendientes</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="historial_horas_extra" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-clock"></i>
+                                        <span className="ms-2">Historial</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
+                    </li>
+                    {/* Fin Submenú Horas Extra */}
                     <li className="nav-item">
                         <Link to="perfil" className="nav-link text-white p-3 d-flex align-items-center">
                             <i className="bi bi-person-circle"></i>

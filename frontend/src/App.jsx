@@ -23,6 +23,9 @@ import BitacoraEmpresa from './pages/GestionAdmin/BitacoraEmpresa';
 import Reglas from './pages/Nomina/Reglas';
 import Estructura from './pages/Nomina/Estructura';
 import Nomina from './pages/Nomina/Nomina';
+import Aprobadores from './pages/HorasExtra/Aprobadores';
+import HorasExtraPendientes from './pages/HorasExtra/HorasExtraPendientes';
+import HistorialHorasExtra from './pages/HorasExtra/HistorialHorasExtra';
 
 function App() {
   return (
@@ -52,6 +55,9 @@ function App() {
           <Route path="reglas" element={<Reglas />} />
           <Route path="estructura" element={<Estructura />} />
           <Route path="nomina" element={<Nomina />} />
+          <Route path="aprobadores" element={<Aprobadores />} />
+          <Route path="horas_extra_pendientes" element={<HorasExtraPendientes />} />
+          <Route path="historial_horas_extra" element={<HistorialHorasExtra />} />
 
         </Route>
         <Route path="/login" element={<ThemeProvider><Login /> </ThemeProvider>}/>

@@ -1,34 +1,21 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Button, Form, Modal } from "react-bootstrap";
+import { Table, Button, Form, Modal, Alert } from "react-bootstrap";
 
 const Nomina = () => {
-    const [boletas, setBoletas] = useState([]);
     const [empleados, setEmpleados] = useState([]);
-    const [filtros, setFiltros] = useState({
-        empleado: "",
+    const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState("");
+    const [boletas, setBoletas] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [generando, setGenerando] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [fechas, setFechas] = useState({
         fecha_inicio: "",
         fecha_fin: "",
     });
-    const [showDetalle, setShowDetalle] = useState(false);
-    const [detalle, setDetalle] = useState([]);
-    const [detalleBoleta, setDetalleBoleta] = useState(null);
 
     const empresaId = localStorage.getItem("empresa_id");
-
-    // Obtener boletas de pago
-    const fetchBoletas = async () => {
-        try {
-            let url = `boletas/?empresa_id=${empresaId}`;
-            if (filtros.empleado) url += `&empleado=${filtros.empleado}`;
-            if (filtros.fecha_inicio) url += `&fecha_inicio=${filtros.fecha_inicio}`;
-            if (filtros.fecha_fin) url += `&fecha_fin=${filtros.fecha_fin}`;
-            const response = await apiClient.get(url);
-            setBoletas(response.data);
-        } catch (error) {
-            console.error("Error al obtener boletas:", error);
-        }
-    };
 
     // Obtener empleados
     const fetchEmpleados = async () => {
@@ -36,7 +23,21 @@ const Nomina = () => {
             const response = await apiClient.get(`empleados/?empresa_id=${empresaId}`);
             setEmpleados(response.data);
         } catch (error) {
-            console.error("Error al obtener empleados:", error);
+            setError("Error al obtener empleados");
+        }
+    };
+
+    // Obtener boletas del empleado seleccionado
+    const fetchBoletasEmpleado = async (empleadoId) => {
+        if (!empleadoId) {
+            setBoletas([]);
+            return;
+        }
+        try {
+            const response = await apiClient.get(`boletas-empleado/${empleadoId}/`);
+            setBoletas(response.data || []);
+        } catch (error) {
+            setError("Error al obtener boletas del empleado");
         }
     };
 
@@ -45,148 +46,135 @@ const Nomina = () => {
     }, []);
 
     useEffect(() => {
-        fetchBoletas();
-        // eslint-disable-next-line
-    }, [filtros]);
+        if (empleadoSeleccionado) {
+            fetchBoletasEmpleado(empleadoSeleccionado);
+        } else {
+            setBoletas([]);
+        }
+    }, [empleadoSeleccionado]);
 
-    // Manejar cambios en los filtros
-    const handleFiltroChange = (e) => {
+    // Manejar cambios en fechas del modal
+    const handleFechaChange = (e) => {
         const { name, value } = e.target;
-        setFiltros({ ...filtros, [name]: value });
+        setFechas({ ...fechas, [name]: value });
     };
 
-    // Ver detalle de boleta
-    const verDetalle = async (boleta) => {
+    // Generar nómina masiva
+    const handleGenerarNomina = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+        setGenerando(true);
         try {
-            const response = await apiClient.get(`detalles/?boleta=${boleta.id}`);
-            setDetalle(response.data);
-            setDetalleBoleta(boleta);
-            setShowDetalle(true);
-        } catch (error) {
-            console.error("Error al obtener detalle:", error);
+            await apiClient.post("generar-masiva/", {
+                empresa_id: empresaId,
+                fecha_inicio: fechas.fecha_inicio,
+                fecha_fin: fechas.fecha_fin,
+            });
+            setSuccess("Nómina generada correctamente.");
+            setShowModal(false);
+            setFechas({ fecha_inicio: "", fecha_fin: "" });
+            // Si hay empleado seleccionado, refresca sus boletas
+            if (empleadoSeleccionado) fetchBoletasEmpleado(empleadoSeleccionado);
+        } catch (err) {
+            setError("Error al generar la nómina.");
         }
+        setGenerando(false);
     };
 
     return (
         <div className="container mt-4">
             <h1 className="mb-4">Nómina</h1>
-            <Form className="row mb-3">
-                <Form.Group className="col-md-4">
-                    <Form.Label>Empleado</Form.Label>
-                    <Form.Select
-                        name="empleado"
-                        value={filtros.empleado}
-                        onChange={handleFiltroChange}
-                    >
-                        <option value="">Todos</option>
-                        {empleados.map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                                {emp.nombre} {emp.apellidos}
-                            </option>
-                        ))}
-                    </Form.Select>
-                </Form.Group>
-                <Form.Group className="col-md-3">
-                    <Form.Label>Desde</Form.Label>
-                    <Form.Control
-                        type="date"
-                        name="fecha_inicio"
-                        value={filtros.fecha_inicio}
-                        onChange={handleFiltroChange}
-                    />
-                </Form.Group>
-                <Form.Group className="col-md-3">
-                    <Form.Label>Hasta</Form.Label>
-                    <Form.Control
-                        type="date"
-                        name="fecha_fin"
-                        value={filtros.fecha_fin}
-                        onChange={handleFiltroChange}
-                    />
-                </Form.Group>
-                <div className="col-md-2 d-flex align-items-end">
-                    <Button variant="primary" onClick={fetchBoletas}>
-                        Buscar
-                    </Button>
-                </div>
-            </Form>
+            {error && <Alert variant="danger">{error}</Alert>}
+            {success && <Alert variant="success">{success}</Alert>}
+            <div className="d-flex mb-3 gap-2">
+                <Form.Select
+                    value={empleadoSeleccionado}
+                    onChange={e => setEmpleadoSeleccionado(e.target.value)}
+                    style={{ maxWidth: 300 }}
+                >
+                    <option value="">Selecciona un empleado</option>
+                    {empleados.map(emp => (
+                        <option key={emp.id} value={emp.id}>
+                            {emp.nombre} {emp.apellidos}
+                        </option>
+                    ))}
+                </Form.Select>
+                <Button variant="success" onClick={() => setShowModal(true)}>
+                    Generar Nómina
+                </Button>
+            </div>
+
             <Table striped bordered hover responsive>
                 <thead className="table-primary">
                     <tr>
-                        <th>Empleado</th>
-                        <th>Periodo</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
                         <th>Total Ingresos</th>
                         <th>Total Deducciones</th>
                         <th>Total Neto</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {boletas.map((b) => (
-                        <tr key={b.id}>
-                            <td>{b.empleado_nombre || b.empleado}</td>
-                            <td>
-                                {b.fecha_inicio} - {b.fecha_fin}
-                            </td>
-                            <td>{b.total_ingresos}</td>
-                            <td>{b.total_deducciones}</td>
-                            <td>{b.total_neto}</td>
-                            <td>{b.estado}</td>
-                            <td>
-                                <Button
-                                    variant="link"
-                                    className="p-0"
-                                    onClick={() => verDetalle(b)}
-                                >
-                                    <i className="bi bi-eye"></i>
-                                </Button>
+                    {boletas.length === 0 ? (
+                        <tr>
+                            <td colSpan={5} className="text-center text-muted">
+                                {empleadoSeleccionado
+                                    ? "No hay boletas para este empleado."
+                                    : "Seleccione un empleado para ver sus boletas."}
                             </td>
                         </tr>
-                    ))}
+                    ) : (
+                        boletas.map((b) => (
+                            <tr key={b.id}>
+                                <td>{b.fecha_inicio}</td>
+                                <td>{b.estado}</td>
+                                <td>{b.total_ingresos}</td>
+                                <td>{b.total_deducciones}</td>
+                                <td>{b.total_neto}</td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </Table>
 
-            {/* Modal Detalle Boleta */}
-            <Modal
-                show={showDetalle}
-                onHide={() => setShowDetalle(false)}
-                centered
-                size="lg"
-            >
+            {/* Modal para generar nómina */}
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        Detalle de Boleta
-                        {detalleBoleta && (
-                            <span className="ms-3 text-muted" style={{ fontSize: "1rem" }}>
-                                {detalleBoleta.empleado_nombre || detalleBoleta.empleado} <br />
-                                {detalleBoleta.fecha_inicio} - {detalleBoleta.fecha_fin}
-                            </span>
-                        )}
-                    </Modal.Title>
+                    <Modal.Title>Generar Nómina</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Código</th>
-                                <th>Tipo</th>
-                                <th>Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {detalle.map((d) => (
-                                <tr key={d.id}>
-                                    <td>{d.nombre}</td>
-                                    <td>{d.codigo}</td>
-                                    <td>{d.tipo}</td>
-                                    <td>{d.monto}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                </Modal.Body>
+                <Form onSubmit={handleGenerarNomina}>
+                    <Modal.Body>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Fecha Inicio</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="fecha_inicio"
+                                value={fechas.fecha_inicio}
+                                onChange={handleFechaChange}
+                                required
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Fecha Fin</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="fecha_fin"
+                                value={fechas.fecha_fin}
+                                onChange={handleFechaChange}
+                                required
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowModal(false)}>
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" type="submit" disabled={generando}>
+                            {generando ? "Generando..." : "Generar"}
+                        </Button>
+                    </Modal.Footer>
+                </Form>
             </Modal>
         </div>
     );

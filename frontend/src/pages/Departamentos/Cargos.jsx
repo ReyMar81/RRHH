@@ -1,7 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importar useNavigate para redirigir
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../services/Apirest";
-import { Table, Button, Modal, Form } from "react-bootstrap";
+import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
+
+// Genera los ítems de paginación estilo Google
+const getPaginationItems = (pagina, totalPaginas) => {
+    let items = [];
+    if (totalPaginas <= 7) {
+        for (let i = 1; i <= totalPaginas; i++) items.push(i);
+    } else {
+        if (pagina <= 4) {
+            items = [1, 2, 3, 4, 5, "...", totalPaginas];
+        } else if (pagina >= totalPaginas - 3) {
+            items = [1, "...", totalPaginas - 4, totalPaginas - 3, totalPaginas - 2, totalPaginas - 1, totalPaginas];
+        } else {
+            items = [1, "...", pagina - 1, pagina, pagina + 1, "...", totalPaginas];
+        }
+    }
+    return items;
+};
 
 const Cargos = () => {
     const [cargos, setCargos] = useState([]);
@@ -18,9 +35,15 @@ const Cargos = () => {
         cargo_padre: "",
     });
 
-    const navigate = useNavigate(); // Hook para redirigir
+    // PAGINACIÓN
+    const [pagina, setPagina] = useState(1);
+    const porPagina = 10;
+    const inicio = (pagina - 1) * porPagina;
+    const fin = inicio + porPagina;
+    const cargosPagina = cargos.slice(inicio, fin);
+    const totalPaginas = Math.ceil(cargos.length / porPagina);
 
-    // Obtener el id de la empresa desde localStorage
+    const navigate = useNavigate();
     const empresaId = localStorage.getItem("empresa_id");
 
     // Obtener cargos desde el backend
@@ -116,12 +139,6 @@ const Cargos = () => {
             <Button onClick={() => { resetForm(); setShowModal(true); }}>
                 Crear Cargo
             </Button>
-            <Button
-                className="ms-2"
-                onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a la nueva página
-            >
-                Cargo Departamento
-            </Button>
             <Table striped bordered hover responsive className="mt-3">
                 <thead className="table-primary">
                     <tr>
@@ -136,7 +153,7 @@ const Cargos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {cargos.map((cargo) => (
+                    {cargosPagina.map((cargo) => (
                         <tr key={cargo.id}>
                             <td>{cargo.nombre}</td>
                             <td>{cargo.tipo_pago.charAt(0).toUpperCase() + cargo.tipo_pago.slice(1)}</td>
@@ -162,6 +179,32 @@ const Cargos = () => {
                     ))}
                 </tbody>
             </Table>
+            {/* Paginación estética */}
+            {totalPaginas > 1 && (
+                <Pagination className="justify-content-center">
+                    <Pagination.Prev
+                        onClick={() => setPagina(pagina - 1)}
+                        disabled={pagina === 1}
+                    />
+                    {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
+                        item === "..." ? (
+                            <Pagination.Ellipsis key={idx} disabled />
+                        ) : (
+                            <Pagination.Item
+                                key={item}
+                                active={pagina === item}
+                                onClick={() => setPagina(item)}
+                            >
+                                {item}
+                            </Pagination.Item>
+                        )
+                    )}
+                    <Pagination.Next
+                        onClick={() => setPagina(pagina + 1)}
+                        disabled={pagina === totalPaginas}
+                    />
+                </Pagination>
+            )}
 
             {/* Modal para crear/editar cargos */}
             <Modal

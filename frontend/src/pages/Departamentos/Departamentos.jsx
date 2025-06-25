@@ -1,7 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../services/Apirest";
-import { Modal, Button, Form, Table } from "react-bootstrap";
+import { Modal, Button, Form, Table, Pagination } from "react-bootstrap";
+
+// Genera los ítems de paginación estilo Google
+const getPaginationItems = (pagina, totalPaginas) => {
+    let items = [];
+    if (totalPaginas <= 7) {
+        for (let i = 1; i <= totalPaginas; i++) items.push(i);
+    } else {
+        if (pagina <= 4) {
+            items = [1, 2, 3, 4, 5, "...", totalPaginas];
+        } else if (pagina >= totalPaginas - 3) {
+            items = [1, "...", totalPaginas - 4, totalPaginas - 3, totalPaginas - 2, totalPaginas - 1, totalPaginas];
+        } else {
+            items = [1, "...", pagina - 1, pagina, pagina + 1, "...", totalPaginas];
+        }
+    }
+    return items;
+};
 
 const Departamentos = () => {
     const [departamentos, setDepartamentos] = useState([]);
@@ -13,9 +30,15 @@ const Departamentos = () => {
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    const navigate = useNavigate();
+    // PAGINACIÓN
+    const [pagina, setPagina] = useState(1);
+    const porPagina = 10;
+    const inicio = (pagina - 1) * porPagina;
+    const fin = inicio + porPagina;
+    const departamentosPagina = departamentos.slice(inicio, fin);
+    const totalPaginas = Math.ceil(departamentos.length / porPagina);
 
-    // Obtener el id de la empresa desde localStorage
+    const navigate = useNavigate();
     const empresaId = localStorage.getItem("empresa_id");
 
     // Obtener departamentos desde el backend
@@ -84,20 +107,6 @@ const Departamentos = () => {
         <div className="container mt-4">
             <h1 className="mb-4">Gestión de Departamentos</h1>
             <div className="d-flex justify-content-between mb-3">
-                <div>
-                    <Button
-                        className="me-2"
-                        onClick={() => navigate("/dashboard/cargos")}
-                    >
-                        Cargos
-                    </Button>
-                    <Button
-                        className="me-2"
-                        onClick={() => navigate("/dashboard/cargos_departamentos")} // Redirigir a CargosDepartamentos
-                    >
-                        Cargo Departamento
-                    </Button>
-                </div>
                 <Button onClick={() => setShowModal(true)}>
                     Crear Departamento
                 </Button>
@@ -111,7 +120,7 @@ const Departamentos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {departamentos.map((departamento) => (
+                    {departamentosPagina.map((departamento) => (
                         <tr key={departamento.id}>
                             <td>{departamento.nombre}</td>
                             <td>{departamento.descripcion}</td>
@@ -136,6 +145,32 @@ const Departamentos = () => {
                     ))}
                 </tbody>
             </Table>
+            {/* Paginación estética */}
+            {totalPaginas > 1 && (
+                <Pagination className="justify-content-center">
+                    <Pagination.Prev
+                        onClick={() => setPagina(pagina - 1)}
+                        disabled={pagina === 1}
+                    />
+                    {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
+                        item === "..." ? (
+                            <Pagination.Ellipsis key={idx} disabled />
+                        ) : (
+                            <Pagination.Item
+                                key={item}
+                                active={pagina === item}
+                                onClick={() => setPagina(item)}
+                            >
+                                {item}
+                            </Pagination.Item>
+                        )
+                    )}
+                    <Pagination.Next
+                        onClick={() => setPagina(pagina + 1)}
+                        disabled={pagina === totalPaginas}
+                    />
+                </Pagination>
+            )}
 
             {/* Modal para crear/editar departamentos */}
             <Modal

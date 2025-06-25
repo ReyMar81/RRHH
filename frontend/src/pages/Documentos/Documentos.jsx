@@ -2,7 +2,24 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../services/Apirest";
 import supabase from "../../services/supabaseClient"; // Importar Supabase
-import { Table, Button, Modal, Form } from "react-bootstrap";
+import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
+
+// Genera los ítems de paginación estilo Google
+const getPaginationItems = (pagina, totalPaginas) => {
+    let items = [];
+    if (totalPaginas <= 7) {
+        for (let i = 1; i <= totalPaginas; i++) items.push(i);
+    } else {
+        if (pagina <= 4) {
+            items = [1, 2, 3, 4, 5, "...", totalPaginas];
+        } else if (pagina >= totalPaginas - 3) {
+            items = [1, "...", totalPaginas - 4, totalPaginas - 3, totalPaginas - 2, totalPaginas - 1, totalPaginas];
+        } else {
+            items = [1, "...", pagina - 1, pagina, pagina + 1, "...", totalPaginas];
+        }
+    }
+    return items;
+};
 
 const Documentos = () => {
     const [documentos, setDocumentos] = useState([]);
@@ -23,6 +40,8 @@ const Documentos = () => {
     const [editId, setEditId] = useState(null);
     const [message, setMessage] = useState("");
     const [uploading, setUploading] = useState(false); // Estado para la carga del archivo
+    const [pagina, setPagina] = useState(1);
+    const porPagina = 10;
 
     const navigate = useNavigate();
 
@@ -180,23 +199,16 @@ const Documentos = () => {
         fetchContratos();
     }, []);
 
+    // Calcular documentos a mostrar
+    const inicio = (pagina - 1) * porPagina;
+    const fin = inicio + porPagina;
+    const documentosPagina = documentos.slice(inicio, fin);
+    const totalPaginas = Math.ceil(documentos.length / porPagina);
+
     return (
         <div className="container mt-4">
             <h1 className="mb-4 ">Gestión de Documentos</h1>
             <div className="d-flex justify-content-between mb-3">
-                <div>
-                    <Button
-                        className="me-2"
-                        onClick={() => navigate("/dashboard/categorias")}
-                    >
-                        Categorías
-                    </Button>
-                    <Button
-                        onClick={() => navigate("/dashboard/tipos")}
-                    >
-                        Tipos
-                    </Button>
-                </div>
                 <Button onClick={() => setShowModal(true)}>
                     Subir Documento
                 </Button>
@@ -213,7 +225,7 @@ const Documentos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {documentos.map((doc) => (
+                    {documentosPagina.map((doc) => (
                         <tr key={doc.id}>
                             <td>
                                 {doc.url ? (
@@ -245,7 +257,7 @@ const Documentos = () => {
                                             categoria_id: doc.categoria_id,
                                             empleado_id: doc.empleado_id,
                                             contrato_id: doc.contrato_id,
-                                            url: doc.url, // Guardar la URL existente
+                                            url: doc.url,
                                         });
                                         setShowModal(true);
                                     }}
@@ -257,6 +269,32 @@ const Documentos = () => {
                     ))}
                 </tbody>
             </Table>
+            {/* Paginación estética */}
+            {totalPaginas > 1 && (
+                <Pagination className="justify-content-center">
+                    <Pagination.Prev
+                        onClick={() => setPagina(pagina - 1)}
+                        disabled={pagina === 1}
+                    />
+                    {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
+                        item === "..." ? (
+                            <Pagination.Ellipsis key={idx} disabled />
+                        ) : (
+                            <Pagination.Item
+                                key={item}
+                                active={pagina === item}
+                                onClick={() => setPagina(item)}
+                            >
+                                {item}
+                            </Pagination.Item>
+                        )
+                    )}
+                    <Pagination.Next
+                        onClick={() => setPagina(pagina + 1)}
+                        disabled={pagina === totalPaginas}
+                    />
+                </Pagination>
+            )}
 
             {/* Modal para crear/editar documento */}
             <Modal
