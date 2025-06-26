@@ -6,12 +6,13 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter, landscape, legal
 from reportlab.pdfgen import canvas
 from rest_framework.decorators import action
-from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import viewsets
 from .models import Empleado, genero_Choices, estado_Civil_Choise
 from .serializer import CambiarPasswordConValidacionSerializer, EmpleadoSerializers
 from rest_framework.permissions import IsAuthenticated
 from .service import cambiar_password_con_validacion, crear_empleado_con_usuario
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
@@ -51,6 +52,22 @@ class EmpleadoViewSets(viewsets.ModelViewSet):
             detalles={"empleado_id": empleado.id}
         )
         serializer = self.get_serializer(empleado)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='mi-departamento/empleados')
+    def empleados_de_mi_departamento(self, request):
+        empleado = Empleado.objects.filter(user_id=request.user).first()
+        if not empleado:
+            return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        contrato = empleado.contratos.filter(estado='ACTIVO').first()
+        if not contrato or not contrato.cargo_departamento:
+            return Response({'error': 'No tiene departamento asignado'}, status=status.HTTP_404_NOT_FOUND)
+        departamento = contrato.cargo_departamento.id_departamento
+        empleados = Empleado.objects.filter(
+            contratos__cargo_departamento__id_departamento=departamento,
+            contratos__estado='ACTIVO'
+        ).distinct()
+        serializer = self.get_serializer(empleados, many=True)
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):

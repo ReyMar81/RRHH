@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from .models import Evaluacion, CriterioEvaluacion, ResultadoEvaluacion
-from .serializer import EvaluacionSerializer, CriterioEvaluacionSerializer, ResultadoEvaluacionSerializer
+from .serializer import EvaluacionSerializer, CriterioEvaluacionSerializer, ResultadoEvaluacionSerializer, EvaluacionPendienteSimpleSerializer
 
 from apps.empleado.models import Empleado
 from apps.horas_extras.models import Aprobadores
@@ -105,7 +105,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         return Response({'mensaje': 'Evaluación solicitada correctamente'}, status=201)
     
     @extend_schema(
-        responses=EvaluacionSerializer(many=True),
+        responses=EvaluacionPendienteSimpleSerializer(many=True),
         summary="Listar evaluaciones pendientes de evaluar"
     )
     @action(detail=False, methods=['get'], url_path='pendientes-evaluar')
@@ -127,7 +127,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             if e.evaluado.departamento_del_empleado().id in departamentos_autorizados and
             e.evaluado != evaluador
         ]
-        serializer = self.get_serializer(evaluaciones_filtradas, many=True)
+        serializer = EvaluacionPendienteSimpleSerializer(evaluaciones_filtradas, many=True)
         return Response(serializer.data)
     
     @extend_schema(

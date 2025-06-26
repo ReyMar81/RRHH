@@ -39,7 +39,7 @@ class EmpleadosActivosPorDepartamentoView(APIView):
 
     def get(self, request, id):
         try:
-            departamento = Departamento.objects.get(pk=id,empresa=request.user.empresa) ##!Aumente esto
+            departamento = Departamento.objects.get(pk=id,empresa=request.user.empresa)
             relaciones = CargoDepartamento.objects.filter(id_departamento=departamento)
             
             contratos = Contrato.objects.select_related(
