@@ -14,7 +14,9 @@ def crear_empresa_con_admin(data):
     empresa = Empresa.objects.create(
         nombre=nombre_empresa,
         direccion=data.get('direccion', ''),
+        pais=data.get('BOL', ''),
         telefono=data.get('telefono', ''),
+        email=email_admin
         # ...otros campos si es necesario
     )
 
@@ -40,9 +42,11 @@ def crear_empresa_con_admin(data):
     send_mail(
         subject='Bienvenido a RRHH SaaS',
         message=f"Usuario: {username_admin}\nContraseña: {password}\nAcceso: https://tu-saas.com/login",
-        from_email='no-reply@tu-saas.com',
+        from_email='hrmsystem2000@gmail.com',
         recipient_list=[email_admin],
         fail_silently=False,
     )
+
+    print(f"[EMPRESA CREADA] {username_admin} / {password}")
 
     return empresa, user, password
