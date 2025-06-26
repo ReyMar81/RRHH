@@ -30,7 +30,7 @@ class EvaluacionPendienteSimpleSerializer(serializers.ModelSerializer):
             'solicitador_nombre',
             'motivo',
             'estado',
-            'fecha_inicio',
+            'fecha_creacion',
         ]
 
     def get_evaluado_nombre(self, obj):

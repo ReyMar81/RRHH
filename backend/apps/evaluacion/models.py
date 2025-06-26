@@ -39,7 +39,8 @@ class Evaluacion(models.Model):
         blank=True, 
         null=True
         )
-    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(blank=True,null=True)
+    fecha_inicio = models.DateTimeField(blank=True,null=True)
     fecha_fin = models.DateTimeField(blank=True,null=True)
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='pendiente')
     comentario_general = models.TextField(blank=True, null=True)

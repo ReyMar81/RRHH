@@ -80,9 +80,10 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         evaluacion = Evaluacion.objects.create(
             motivo=motivo_evaluacion,
             evaluado=evaluado,
-            solicitador= solicitador,
+            solicitador=solicitador,
             estado='pendiente',
-            empresa=solicitador.empresa
+            empresa=solicitador.empresa,
+            fecha_creacion=timezone.now()
         )
 
         aprobadores = Aprobadores.objects.filter(
@@ -169,6 +170,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         if not fecha_fin:
             return Response({'error': 'Debe enviar una fecha de fin'}, status=400)
         evaluacion.evaluador = evaluador
+        evaluacion.fecha_inicio = timezone.now()
         evaluacion.fecha_fin = fecha_fin
         evaluacion.estado = 'en proceso'
         evaluacion.save()
@@ -331,6 +333,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         comentario_general = request.data.get('comentario_general', '')
         evaluacion.comentario_general = comentario_general
         evaluacion.estado = 'completada'
+        evaluacion.fecha_fin = timezone.now()
         evaluacion.save()
 
         return Response({'mensaje': 'Evaluación completada exitosamente'})
