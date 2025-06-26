@@ -138,8 +138,8 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
                     "fecha_fin": {
                         "type": "string",
                         "format": "date",
-                        "example": "2025-07-01",
-                        "description": "Fecha de fin de la evaluación (AAAA-MM-DD)"
+                        "example": "01-07-2025",
+                        "description": "Fecha de fin de la evaluación (DD-MM-YYYY)"
                     }
                 },
                 "required": ["fecha_fin"]
@@ -164,7 +164,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         try:
             fecha_fin = datetime.strptime(fecha_fin_str, '%d-%m-%Y') 
         except (TypeError, ValueError):
-            return Response({'error': 'Formato de fecha inválido. Use AAAA-MM-DD'}, status=400)
+            return Response({'error': 'Formato de fecha inválido. Use DD-MM-MMMM'}, status=400)
 
         if not fecha_fin:
             return Response({'error': 'Debe enviar una fecha de fin'}, status=400)
@@ -174,8 +174,46 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         evaluacion.save()
         return Response({'mensaje': 'Evaluación aceptada, puede comenzar a completarla'})
 
+    @action(detail=False, methods=['get'], url_path='evaluaciones-finalizadas-de-un-empleado')
+    def finalizadas_de_un_empleado(self, request):
+        try:
+            empleado = Empleado.objects.get(user_id=request.user)
+        except empleado.DoesNotExist:
+            return Response({'error': 'Empleado no encontrado'}, status=404)
+        evaluaciones = Evaluacion.objects.filter(
+            evaluado=empleado,
+            estado='completada',
+            empresa=empleado.empresa
+        )      
+        serializer = self.get_serializer(evaluaciones, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='evaluaciones-finalizadas')
+    def finalizadas(self, request):
+        try:
+            empleado = Empleado.objects.get(user_id=request.user)
+        except empleado.DoesNotExist:
+            return Response({'error': 'Empleado no encontrado'}, status=404)
+        evaluaciones = Evaluacion.objects.filter(
+            estado='completada',
+            empresa = empleado.empresa
+        )       
+        serializer = self.get_serializer(evaluaciones, many=True)
+        return Response(serializer.data)
 
-
+    @action(detail=False, methods=['get'], url_path='evaluacionesde-un-aprobador-en-proceso')
+    def evaluaciones_en_proceso_de_un_aprobador(self, request):
+        try:
+            empleado = Empleado.objects.get(user_id=request.user)
+        except empleado.DoesNotExist:
+            return Response({'error': 'Empleado no encontrado'}, status=404)
+        evaluaciones = Evaluacion.objects.filter(
+            estado='en proceso',
+            evaluador = empleado,
+            empresa = empleado.empresa
+        )
+        serializer = self.get_serializer(evaluaciones, many=True)
+        return Response(serializer.data)
 
     @extend_schema(
         request={

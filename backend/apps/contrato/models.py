@@ -32,5 +32,5 @@ class Contrato(models.Model):
     cargo_departamento = models.ForeignKey(CargoDepartamento, on_delete=models.PROTECT, related_name='contratos')
     empresa=models.ForeignKey(Empresa, on_delete=models.CASCADE)
     
-    evaluacion_periodicidad  = models.DurationField(null=True, blank=True)
+    evaluacion_periodicidad  = models.DurationField(null=True, blank=True) #Dias 
     ultima_evaluacion_programada = models.DateField(null=True, blank=True)
