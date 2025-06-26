@@ -73,7 +73,6 @@ class HorasExtras(models.Model):
                 empresa = empleado.empresa
             )
 
-
 ENCARGADO_CHOICES = [
     ('hora_extra', 'Hora Extra'),
     ('evaluacion', 'Evaluación'),

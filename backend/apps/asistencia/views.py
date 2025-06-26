@@ -39,7 +39,7 @@ class RegistroAsistenciaViewSet(viewsets.ViewSet):
                 fecha=hoy,
                 defaults={
                     'hora_entrada': ahora,
-                    'empresa': empleado.empresa    #Auemnte
+                    'empresa': empleado.empresa
                 }
             )
 

@@ -13,6 +13,7 @@ from rrhh import settings
 from apps.noticacion.models import Notificacion
 from datetime import datetime
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 # Create your views here.
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
@@ -28,6 +29,20 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
 
     
     
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "evaluado": {"type": "integer", "description": "ID del empleado a evaluar"},
+                    "motivo": {"type": "string", "description": "Motivo de la evaluación"}
+                },
+                "required": ["evaluado", "motivo"]
+            }
+        },
+        responses={201: OpenApiResponse(description="Evaluación solicitada correctamente", examples=[{"mensaje": "Evaluación solicitada correctamente"}])},
+        summary="Solicitar evaluación"
+    )
     @action(detail=False, methods=['post'], url_path='solicitar')
     def solicitar_evaluacion(self, request):
         try:
@@ -89,6 +104,10 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             )
         return Response({'mensaje': 'Evaluación solicitada correctamente'}, status=201)
     
+    @extend_schema(
+        responses=EvaluacionSerializer(many=True),
+        summary="Listar evaluaciones pendientes de evaluar"
+    )
     @action(detail=False, methods=['get'], url_path='pendientes-evaluar')
     def pendientes_evaluar(self, request):
         try:
@@ -111,6 +130,24 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(evaluaciones_filtradas, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-07-01",
+                        "description": "Fecha de fin de la evaluación (AAAA-MM-DD)"
+                    }
+                },
+                "required": ["fecha_fin"]
+            }
+        },
+        responses={200: OpenApiResponse(description="Evaluación aceptada", examples=[{"mensaje": "Evaluación aceptada, puede comenzar a completarla"}])},
+        summary="Aceptar evaluación"
+    )
     @action(detail=True, methods=['patch'], url_path='aceptar')
     def aceptar_evaluacion(self, request, pk=None):
         try:
@@ -140,6 +177,21 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
 
 
 
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "criterio_id": {"type": "integer", "description": "ID del criterio de evaluación"},
+                    "puntaje": {"type": "integer", "description": "Puntaje asignado"},
+                    "comentario": {"type": "string", "description": "Comentario", "nullable": True}
+                },
+                "required": ["criterio_id", "puntaje"]
+            }
+        },
+        responses={200: OpenApiResponse(description="Criterio agregado correctamente", examples=[{"mensaje": "Criterio agregado correctamente"}])},
+        summary="Agregar criterio a evaluación"
+    )
     @action(detail=True, methods=['post'], url_path='agregar-criterio')
     def agregar_criterio(self, request, pk=None):
         try:
@@ -215,6 +267,18 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             
             
 
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "comentario_general": {"type": "string", "description": "Comentario general", "nullable": True}
+                }
+            }
+        },
+        responses={200: OpenApiResponse(description="Evaluación completada exitosamente", examples=[{"mensaje": "Evaluación completada exitosamente"}])},
+        summary="Finalizar evaluación"
+    )
     @action(detail=True, methods=['patch'], url_path='finalizar')
     def finalizar_evaluacion(self, request, pk=None):
         try:
