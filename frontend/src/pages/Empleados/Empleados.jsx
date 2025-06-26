@@ -27,6 +27,28 @@ const Empleados = () => {
     const [totalPaginas, setTotalPaginas] = useState(1);
     const [busqueda, setBusqueda] = useState(""); // Nuevo estado para el filtro de texto
 
+    const [showReporteModal, setShowReporteModal] = useState(false);
+    const [reporteFormato, setReporteFormato] = useState("pdf");
+    const [reporteParams, setReporteParams] = useState({
+        genero: "",
+        estado_civil: "",
+        fecha_ingreso_inicio: "",
+        fecha_ingreso_fin: "",
+        departamento: "",
+        cargo: "",
+        tipo_contrato: "",
+    });
+    const [cargos, setCargos] = useState([]);
+
+    const fetchCargos = async () => {
+        try {
+            const response = await apiClient.get(`cargos/`);
+            setCargos(response.data);
+        } catch (error) {
+            console.error("Error al obtener cargos:", error);
+        }
+    };
+
     // Opciones estáticas para género y estado civil
     const generoChoices = [
         { value: "M", label: "Masculino" },
@@ -134,6 +156,43 @@ const Empleados = () => {
         }
     };
 
+    const generarReporte = async () => {
+        try {
+            const endpoint =
+                reporteFormato === "pdf"
+                    ? "reportes/reporte_empleados_pdf/"
+                    : "reportes/reporte_empleados_excel/";
+
+            const params = new URLSearchParams();
+            Object.entries(reporteParams).forEach(([key, value]) => {
+                if (value !== "") params.append(key, value);
+            });
+            params.append("empresa_id", empresaId);
+
+            const response = await apiClient.get(`${endpoint}?${params.toString()}`, {
+                responseType: "blob",
+            });
+
+            const blob = new Blob([response.data], {
+                type: reporteFormato === "pdf"
+                    ? "application/pdf"
+                    : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `reporte_empleados.${reporteFormato === "pdf" ? "pdf" : "xlsx"}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setShowReporteModal(false);
+        } catch (error) {
+            console.error("Error al generar el reporte:", error);
+            alert("No se pudo generar el reporte.");
+        }
+    };
+
     // Manejar el envío del formulario
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -170,6 +229,7 @@ const Empleados = () => {
         fetchEmpleados();
         fetchDepartamentos();
         fetchContratos();
+        fetchCargos();
     }, []);
 
     // Actualizar empleados filtrados cuando cambie el departamento, empleados o búsqueda
@@ -220,6 +280,9 @@ const Empleados = () => {
                 />
                 <Button variant="primary" onClick={() => setShowModal(true)}>
                     Crear Empleado
+                </Button>
+                <Button variant="success" className="me-2" onClick={() => setShowReporteModal(true)}>
+                    Reporte
                 </Button>
             </div>
             <Table striped bordered hover responsive className="table-sm">
@@ -459,6 +522,87 @@ const Empleados = () => {
                     </Form>
                 </Modal.Body>
             </Modal>
+            <Modal show={showReporteModal} onHide={() => setShowReporteModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Generar Reporte</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-2">
+                            <Form.Label>Formato</Form.Label>
+                            <Form.Select value={reporteFormato} onChange={(e) => setReporteFormato(e.target.value)}>
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Género</Form.Label>
+                            <Form.Select value={reporteParams.genero} onChange={(e) => setReporteParams({ ...reporteParams, genero: e.target.value })}>
+                                <option value="">Todos</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Estado Civil</Form.Label>
+                            <Form.Select value={reporteParams.estado_civil} onChange={(e) => setReporteParams({ ...reporteParams, estado_civil: e.target.value })}>
+                                <option value="">Todos</option>
+                                <option value="S">Soltero/a</option>
+                                <option value="C">Casado/a</option>
+                                <option value="V">Viudo/a</option>
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Fecha de Ingreso (inicio)</Form.Label>
+                            <Form.Control type="date" value={reporteParams.fecha_ingreso_inicio} onChange={(e) => setReporteParams({ ...reporteParams, fecha_ingreso_inicio: e.target.value })} />
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Fecha de Ingreso (fin)</Form.Label>
+                            <Form.Control type="date" value={reporteParams.fecha_ingreso_fin} onChange={(e) => setReporteParams({ ...reporteParams, fecha_ingreso_fin: e.target.value })} />
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Departamento</Form.Label>
+                            <Form.Select value={reporteParams.departamento} onChange={(e) => setReporteParams({ ...reporteParams, departamento: e.target.value })}>
+                                <option value="">Todos</option>
+                                {departamentos.map(dep => (
+                                    <option key={dep.id} value={dep.id}>{dep.nombre}</option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-2">
+                            <Form.Label>Cargo</Form.Label>
+                            <Form.Select value={reporteParams.cargo} onChange={(e) => setReporteParams({ ...reporteParams, cargo: e.target.value })}>
+                                <option value="">Todos</option>
+                                {cargos.map(cargo => (
+                                    <option key={cargo.id} value={cargo.id}>{cargo.nombre}</option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Tipo de Contrato</Form.Label>
+                            <Form.Select value={reporteParams.tipo_contrato} onChange={(e) => setReporteParams({ ...reporteParams, tipo_contrato: e.target.value })}>
+                                <option value="">Todos</option>
+                                <option value="INDEFINIDO">Indefinido</option>
+                                <option value="PLAZO FIJO">Plazo Fijo</option>
+                                <option value="MEDIO TIEMPO">Medio Tiempo</option>
+                                <option value="PASANTIA">Pasantía</option>
+                            </Form.Select>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReporteModal(false)}>Cancelar</Button>
+                    <Button variant="primary" onClick={generarReporte}>Generar</Button>
+                </Modal.Footer>
+            </Modal>
+
         </div>
     );
 };
