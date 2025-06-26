@@ -19,6 +19,7 @@ PUNTAJE_CHOICES = [
 ]
 
 class Evaluacion(models.Model):
+    motivo = models.CharField(max_length=255, null= True, blank=True)
     evaluador = models.ForeignKey(
         Empleado,
         on_delete=models.PROTECT,
@@ -34,7 +35,9 @@ class Evaluacion(models.Model):
     solicitador = models.ForeignKey(
         Empleado,
         on_delete=models.PROTECT,
-        related_name='evaluaciones_solicitada'
+        related_name='evaluaciones_solicitada',
+        blank=True, 
+        null=True
         )
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_fin = models.DateTimeField(blank=True,null=True)

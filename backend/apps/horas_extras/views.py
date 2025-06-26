@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from apps.horas_extras.models import HorasExtras, Aprobadores
 from apps.horas_extras.serializers import HorasExtrasSerializer, AprobadoresDeHorasExtraSereializer
 from apps.empleado.models import Empleado
-from apps.contrato.models import Contrato
 from apps.noticacion.models import Notificacion
 from datetime import timedelta
 from rrhh import settings
@@ -92,7 +91,8 @@ class HorasExtrasViewSet(viewsets.ModelViewSet):
 
         aprobadores = Aprobadores.objects.filter(
             departamento=departamento,
-            encargado_de='hora_extra'
+            encargado_de='hora_extra',
+            empresa = empleado.empresa
             )
         
         url_base = settings.FRONTEND_URL
@@ -215,8 +215,7 @@ class AprobadoresDeHorasExtraViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
         return  Aprobadores.objects.filter(
-            empresa=self.request.user.empresa,
-            encargado_de='hora_extra' 
+            empresa=self.request.user.empresa
             )
     
     def perform_create(self, serializer):

@@ -8,9 +8,11 @@ from .serializer import EvaluacionSerializer, CriterioEvaluacionSerializer, Resu
 
 from apps.empleado.models import Empleado
 from apps.horas_extras.models import Aprobadores
+from apps.contrato.models import Contrato
 from rrhh import settings
 from apps.noticacion.models import Notificacion
 from datetime import datetime
+from django.utils import timezone
 # Create your views here.
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
@@ -37,6 +39,10 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         if not evaluado_id:
             return Response({'error': 'Debe enviar el campo evaluado'}, status=400)
 
+        motivo_evaluacion = request.data.get('motivo')
+        if not motivo_evaluacion:
+            return Response({'error': 'Debe enviar el motivo de la evaluacion'}, status=400)
+        
         try:
             evaluado = Empleado.objects.get(pk=evaluado_id)
         except Empleado.DoesNotExist:
@@ -46,6 +52,8 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         if not departamento:
             raise ValueError('El evaluado no tiene un departamento asignado')
         
+        if solicitador.departamento_del_empleado() != departamento:
+            raise ValueError('El solictador solo puede pedir evaluaciones para su mismo departamento')
         existe = Evaluacion.objects.filter(
             evaluado=evaluado,
             solicitador=solicitador,
@@ -55,6 +63,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Ya existe una evaluación pendiente para este empleado'}, status=400)
         
         evaluacion = Evaluacion.objects.create(
+            motivo=motivo_evaluacion,
             evaluado=evaluado,
             solicitador= solicitador,
             estado='pendiente',
@@ -63,7 +72,8 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
 
         aprobadores = Aprobadores.objects.filter(
             departamento=departamento,
-            encargado_de='evaluacion'
+            encargado_de='evaluacion',
+            empresa = solicitador.empresa
             )
         
         url_base = settings.FRONTEND_URL
@@ -72,8 +82,9 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             Notificacion.objects.create(
                 empleado = aprobador.empleado,
                 titulo='Nueva evaluación pendiente',
-                mensaje=f'Se solicitó una evaluación para: {evaluado.nombre} {evaluado.apellidos}',
-                url = f"{url_base}/evaluaciones/{evaluacion.id}/aceptar", #!  CAMBIAR A URL DONDE SE APRUEBE LA SOLICITUD
+                mensaje=f'Se solicitó una evaluación para: {evaluado.nombre} {evaluado.apellidos}\n'
+                        f'El siguiente motivo: {motivo_evaluacion}',
+                url = f"{url_base}/evaluaciones/{evaluacion.id}/aceptar",
                 empresa = evaluado.empresa
             )
         return Response({'mensaje': 'Evaluación solicitada correctamente'}, status=201)
@@ -94,12 +105,13 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         )
         evaluaciones_filtradas = [
             e for e in evaluaciones_pendientes
-            if e.evaluado.departamento_del_empleado() in departamentos_autorizados
+            if e.evaluado.departamento_del_empleado().id in departamentos_autorizados and
+            e.evaluado != evaluador
         ]
         serializer = self.get_serializer(evaluaciones_filtradas, many=True)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], url_path='aceptar')
+    @action(detail=True, methods=['patch'], url_path='aceptar')
     def aceptar_evaluacion(self, request, pk=None):
         try:
             evaluacion = self.get_object()
@@ -113,7 +125,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
 
         fecha_fin_str = request.data.get('fecha_fin')
         try:
-            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d')  # o el formato que uses
+            fecha_fin = datetime.strptime(fecha_fin_str, '%d-%m-%Y') 
         except (TypeError, ValueError):
             return Response({'error': 'Formato de fecha inválido. Use AAAA-MM-DD'}, status=400)
 
@@ -140,7 +152,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             return Response({'error': 'No tiene permiso para modificar esta evaluación'}, status=403)
 
         criterio_id = request.data.get('criterio_id')
-        puntaje = request.data.get('puntaje')  # opcional en este paso
+        puntaje = request.data.get('puntaje')
         comentario = request.data.get('comentario', '')
 
         try:
@@ -159,11 +171,51 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         return Response({'mensaje': 'Criterio agregado correctamente'})
 
 
+    def evaluacionesProgramadas():
+        hoy = timezone.now().date()
+        for contrato in Contrato.objects.filter(estado='activo', evaluacion_periodicidad__isnull=False):
+            ultima = contrato.ultima_evaluacion_programada or contrato.fecha_inicio
+            if hoy >= (ultima + contrato.evaluacion_periodicidad):
+                ya_existe = Evaluacion.objects.filter(
+                    evaluado=contrato.empleado,
+                    empresa=contrato.empresa,
+                    estado__in=['pendiente', 'en proceso']
+                ).exists()
+                if not ya_existe:
+                    evaluacion = Evaluacion.objects.create(
+                        motivo='Evaluacion programada por contrato',
+                        evaluado=contrato.empleado,
+                        estado='pendiente',
+                        empresa=contrato.empresa
+                    )
+                    contrato.ultima_evaluacion_programada = hoy
+                    contrato.save()
+                    aprobadores = Aprobadores.objects.filter(
+                        departamento=contrato.cargo_departamento.id_departamento,
+                        encargado_de='evaluacion',
+                        empresa=contrato.empresa
+                    )
+                    url_base = settings.FRONTEND_URL
+        
+                    for aprobador in aprobadores:
+                        Notificacion.objects.create(
+                            empleado = aprobador.empleado,
+                            titulo='Evaluación periódica pendiente',
+                            mensaje=(
+                                f'Se ha programado automáticamente una evaluación para '
+                                f'{contrato.empleado.nombre} {contrato.empleado.apellidos} según su contrato.\n'
+                                f'Por favor, asigne un evaluador o acepte esta evaluación.'
+                                f'Esta evaluación fue generada por el sistema cada {contrato.evaluacion_periodicidad.days} días.'
+                            ),
+                            url = f"{url_base}/evaluaciones/{evaluacion.id}/aceptar",
+                            empresa = contrato.empresa
+                        )
+            
+            
+            
+            
 
-
-
-
-    @action(detail=True, methods=['post'], url_path='finalizar')
+    @action(detail=True, methods=['patch'], url_path='finalizar')
     def finalizar_evaluacion(self, request, pk=None):
         try:
             evaluacion = self.get_object()
