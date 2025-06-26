@@ -31,12 +31,12 @@ def crear_empleado_con_usuario(data, empresa=None):
         send_mail(
             subject='Tu cuenta ha sido creada',
             message=f"Usuario: {username}\nContraseña: {password}",
-            from_email='no-reply@miempresa.com',
+            from_email='hrmsystem2000@gmail.com',
             recipient_list=[empleado.correo_personal],
             fail_silently=False,
         )
 
-    print(f"[CREADO] {username} / {password}")
+    print(f"[EMPELADO CREADO] {username} / {password}")
     return empleado, username, password
 
 def iniciales(apellidos: str):

@@ -175,4 +175,10 @@ CORS_ALLOW_ALL_ORIGINS = True  # (o solo los necesarios en producción)
 
 AUTH_USER_MODEL = 'security.Usuario'
 # Configuración de email para desarrollo (muestra los correos en consola)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'hrmsystem2000@gmail.com'
+EMAIL_HOST_PASSWORD = 'sautrswbzmrlocra'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

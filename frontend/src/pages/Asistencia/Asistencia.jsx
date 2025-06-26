@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Pagination, Form, Row, Col, Button } from "react-bootstrap";
+import { Table, Pagination, Form, Row, Col, Button, Modal } from "react-bootstrap";
 
 // Genera los ítems de paginación estilo Google
 const getPaginationItems = (pagina, totalPaginas) => {
@@ -34,6 +34,64 @@ const Asistencia = () => {
 
     const empresaId = localStorage.getItem("empresa_id");
 
+    //Reporte
+    const [showReporteModal, setShowReporteModal] = useState(false);
+    const [reporteFecha, setReporteFecha] = useState("");
+    const [reporteDepartamento, setReporteDepartamento] = useState("");
+    const [reporteCargo, setReporteCargo] = useState("");
+    const [departamentos, setDepartamentos] = useState([]);
+    const [cargos, setCargos] = useState([]);
+
+    //Obtener empleados
+    const fetchDepartamentos = async () => {
+        try {
+            const response = await apiClient.get(`departamentos/`);
+            setDepartamentos(response.data);
+        } catch (error) {
+            console.error("Error al obtener departamentos:", error);
+        }
+    };
+    //Obtener Cargos
+    const fetchCargos = async () => {
+        try {
+            const response = await apiClient.get(`cargos/`);
+            setCargos(response.data);
+        } catch (error) {
+            console.error("Error al obtener cargos:", error);
+        }
+    };
+
+    const generarReportePdf = async () => {
+        if (!reporteFecha) {
+            alert("Debe seleccionar una fecha");
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams();
+            params.append("fecha", reporteFecha);
+            if (reporteDepartamento) params.append("departamento", reporteDepartamento);
+            if (reporteCargo) params.append("cargo", reporteCargo);
+
+            const response = await apiClient.get(`asistencias/reporte-pdf/?${params.toString()}`, {
+                responseType: "blob",
+            });
+
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `reporte_asistencias_${reporteFecha}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setShowReporteModal(false);
+        } catch (error) {
+            console.error("Error al generar el reporte:", error);
+            alert("No se pudo generar el reporte.");
+        }
+    };
+
     // Obtener asistencias
     const fetchAsistencias = async () => {
         try {
@@ -62,6 +120,8 @@ const Asistencia = () => {
         const cargarDatos = async () => {
             await fetchAsistencias();
             await fetchEmpleados();
+            await fetchDepartamentos();
+            await fetchCargos();
             setDatosCargados(true);
         };
         cargarDatos();
@@ -171,6 +231,14 @@ const Asistencia = () => {
                             <i className="bi bi-x-circle me-2"></i>
                             Limpiar filtros
                         </Button>
+                        <Button
+                            variant="danger"
+                            className="ms-2"
+                            onClick={() => setShowReporteModal(true)}
+                        >
+                            <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                            Reporte
+                        </Button>
                     </Col>
                 </Row>
             </Form>
@@ -232,6 +300,56 @@ const Asistencia = () => {
                     />
                 </Pagination>
             )}
+            <Modal show={showReporteModal} onHide={() => setShowReporteModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Reporte de Asistencias</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Fecha</Form.Label>
+                            <Form.Control
+                                type="date"
+                                value={reporteFecha}
+                                onChange={(e) => setReporteFecha(e.target.value)}
+                                required
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Departamento (opcional)</Form.Label>
+                            <Form.Select
+                                value={reporteDepartamento}
+                                onChange={(e) => setReporteDepartamento(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {departamentos.map(dep => (
+                                    <option key={dep.id} value={dep.id}>{dep.nombre}</option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Cargo (opcional)</Form.Label>
+                            <Form.Select
+                                value={reporteCargo}
+                                onChange={(e) => setReporteCargo(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {cargos.map(cargo => (
+                                    <option key={cargo.id} value={cargo.id}>{cargo.nombre}</option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReporteModal(false)}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={generarReportePdf}>
+                        Generar PDF
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
