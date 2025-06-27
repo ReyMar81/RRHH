@@ -421,11 +421,15 @@ const Documentos = () => {
                                     onChange={handleChange}
                                 >
                                     <option value="">Seleccione un contrato</option>
-                                    {contratosFiltrados.map((contrato) => (
-                                        <option key={contrato.id} value={contrato.id}>
-                                            {contrato.tipo_contrato}
-                                        </option>
-                                    ))}
+                                    {contratosFiltrados.map((contrato) => {
+                                        const empleado = empleados.find(e => String(e.id) === String(contrato.empleado));
+                                        const nombreEmpleado = empleado ? `${empleado.nombre} ${empleado.apellidos}` : "Sin nombre";
+                                        return (
+                                            <option key={contrato.id} value={contrato.id}>
+                                                {nombreEmpleado} - {contrato.tipo_contrato} ({contrato.estado})
+                                            </option>
+                                        );
+                                    })}
                                 </Form.Select>
                             </Form.Group>
                         )}
