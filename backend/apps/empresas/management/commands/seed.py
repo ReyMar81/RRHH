@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+
+from apps.categoria.models import Categoria
 from apps.departamento.models import Departamento
 from apps.cargo.models import Cargo
 from apps.cargo_departamento.models import CargoDepartamento
@@ -6,12 +8,17 @@ from apps.contrato.models import Contrato
 from apps.empleado.models import Empleado
 from apps.empresas.service import crear_empresa_con_admin
 from apps.empleado.service import crear_empleado_con_usuario
+from apps.evaluacion.models import CriterioEvaluacion
+from apps.horas_extras.models import Aprobadores
 from apps.suscripciones.models import Plan
 from django.contrib.auth.models import Group, Permission
 from decimal import Decimal
 from datetime import time, date, timedelta
 from faker import Faker
 import random
+
+from apps.tipo.models import Tipo
+
 
 class Command(BaseCommand):
     help = 'Seed para empresas pequeñas con empleados activos y finalizados'
@@ -59,6 +66,9 @@ class Command(BaseCommand):
                 empresa, admin_user, admin_pass, fake, datos['crear_contratos_finalizados']
             )
 
+            self.crear_tipos_y_categorias_documentos(empresa)
+            self.crear_criterios_evaluacion(empresa)
+
             resumen = [f'\n🔐 Credenciales para {empresa.nombre}:']
             resumen.append(f'    Admin      -> {admin_user.username} / {admin_pass}')
             if supervisores and empleados:
@@ -88,7 +98,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(r))
 
     def crear_datos_para_empresa(self, empresa, admin_user, admin_pass, fake, crear_contratos_finalizados):
-        departamentos_nombres = ['Administración', 'Producción', 'Ventas']
+        from datetime import timedelta
+
+        departamentos_nombres = ['Administración', 'Producción', 'Ventas', 'RRHH']
         departamentos = {}
         for nombre in departamentos_nombres:
             dep = Departamento.objects.create(nombre=nombre, descripcion=fake.sentence(), empresa=empresa)
@@ -126,7 +138,7 @@ class Command(BaseCommand):
                 'ci': fake.unique.random_number(digits=8, fix_len=True),
                 'nombre': nombre,
                 'apellidos': fake.last_name(),
-                'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                'fecha_nacimiento': date.today() - timedelta(days=random.randint(20 * 365, 60 * 365)),
                 'genero': genero,
                 'estado_civil': random.choice(['S', 'C', 'V']),
                 'direccion': fake.address(),
@@ -146,20 +158,35 @@ class Command(BaseCommand):
             )
             cargos_departamento.append(cargo_dep)
 
+            # Evaluación: indefinido = 6 meses
+            fecha_inicio = date.today() - timedelta(days=180)
+            evaluacion_periodicidad = timedelta(days=180)
+            ultima_evaluacion = fecha_inicio + evaluacion_periodicidad
+
             Contrato.objects.create(
                 tipo_contrato='INDEFINIDO',
-                fecha_inicio=date.today() - timedelta(days=180),
+                fecha_inicio=fecha_inicio,
                 fecha_fin=None,
                 estado='ACTIVO',
                 empleado=supervisor,
                 cargo_departamento=cargo_dep,
-                empresa=empresa
+                empresa=empresa,
+                evaluacion_periodicidad=evaluacion_periodicidad,
+                ultima_evaluacion_programada=ultima_evaluacion
+            )
+
+            Aprobadores.objects.create(
+                empleado=supervisor,
+                departamento=dep,
+                empresa=empresa,
+                encargado_de='evaluacion'
             )
 
         cargos_info = [
             ('Operario', 'mensual', 3500, 'Producción', 2),
             ('Vendedor', 'mensual', 4000, 'Ventas', 2),
-            ('Asistente Administrativo', 'mensual', 3800, 'Administración', 1)
+            ('Asistente Administrativo', 'mensual', 3800, 'Administración', 1),
+            ('Analista RRHH', 'mensual', 4500, 'RRHH', 2)
         ]
 
         for nombre, tipo_pago, salario, dep_nombre, cantidad in cargos_info:
@@ -188,7 +215,7 @@ class Command(BaseCommand):
                     'ci': fake.unique.random_number(digits=8, fix_len=True),
                     'nombre': nombre_emp,
                     'apellidos': fake.last_name(),
-                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20 * 365, 60 * 365)),
                     'genero': genero,
                     'estado_civil': random.choice(['S', 'C', 'V']),
                     'direccion': fake.address(),
@@ -201,14 +228,22 @@ class Command(BaseCommand):
                 empleado.user_id.groups.add(grupo_empleado)
                 empleados_creados.append((empleado, username, password))
 
+                tipo_contrato = random.choice(['PLAZO FIJO', 'MEDIO TIEMPO'])
+                fecha_inicio = date.today() - timedelta(days=random.randint(30, 180))
+                fecha_fin = fecha_inicio + timedelta(days=3 * 365)
+                evaluacion_periodicidad = timedelta(days=180)
+                ultima_evaluacion = fecha_inicio + evaluacion_periodicidad
+
                 Contrato.objects.create(
-                    tipo_contrato='PLAZO FIJO',
-                    fecha_inicio=date.today() - timedelta(days=random.randint(30, 180)),
-                    fecha_fin=date.today() + timedelta(days=random.randint(90, 180)),
+                    tipo_contrato=tipo_contrato,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
                     estado='ACTIVO',
                     empleado=empleado,
                     cargo_departamento=cargo_dep,
-                    empresa=empresa
+                    empresa=empresa,
+                    evaluacion_periodicidad=evaluacion_periodicidad,
+                    ultima_evaluacion_programada=ultima_evaluacion
                 )
 
         if crear_contratos_finalizados:
@@ -222,7 +257,7 @@ class Command(BaseCommand):
                     'ci': fake.unique.random_number(digits=8, fix_len=True),
                     'nombre': nombre_emp,
                     'apellidos': fake.last_name(),
-                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20*365, 60*365)),
+                    'fecha_nacimiento': date.today() - timedelta(days=random.randint(20 * 365, 60 * 365)),
                     'genero': genero,
                     'estado_civil': random.choice(['S', 'C', 'V']),
                     'direccion': fake.address(),
@@ -236,7 +271,18 @@ class Command(BaseCommand):
 
                 tipo_contrato = random.choice(tipos_contrato)
                 fecha_inicio = date.today() - timedelta(days=random.randint(365, 1500))
-                fecha_fin = fecha_inicio + timedelta(days=random.randint(180, 720))
+
+                if tipo_contrato == 'INDEFINIDO':
+                    fecha_fin = None
+                    evaluacion_periodicidad = timedelta(days=180)
+                elif tipo_contrato in ['PLAZO FIJO', 'MEDIO TIEMPO']:
+                    fecha_fin = fecha_inicio + timedelta(days=3 * 365)
+                    evaluacion_periodicidad = timedelta(days=180)
+                elif tipo_contrato == 'PASANTIA':
+                    fecha_fin = fecha_inicio + timedelta(days=random.randint(60, 180))
+                    evaluacion_periodicidad = timedelta(days=30)
+
+                ultima_evaluacion = fecha_inicio + evaluacion_periodicidad
 
                 Contrato.objects.create(
                     tipo_contrato=tipo_contrato,
@@ -246,7 +292,63 @@ class Command(BaseCommand):
                     empleado=empleado,
                     cargo_departamento=random.choice(cargos_departamento),
                     empresa=empresa,
-                    observaciones='Contrato concluido satisfactoriamente'
+                    observaciones='Contrato concluido satisfactoriamente',
+                    evaluacion_periodicidad=evaluacion_periodicidad,
+                    ultima_evaluacion_programada=ultima_evaluacion
                 )
 
         return supervisores_creados, empleados_creados
+
+    def crear_tipos_y_categorias_documentos(self, empresa):
+        # Categorías comunes
+        categorias_data = [
+            {'nombre': 'Identificación', 'descripcion': 'Documentos personales de identidad'},
+            {'nombre': 'Contrato', 'descripcion': 'Contratos laborales y anexos'},
+            {'nombre': 'Evaluación', 'descripcion': 'Resultados y formularios de evaluación'},
+            {'nombre': 'Capacitación', 'descripcion': 'Certificados y registros de capacitación'}
+        ]
+
+        for cat in categorias_data:
+            Categoria.objects.get_or_create(
+                nombre=cat['nombre'],
+                empresa=empresa,
+                defaults={'descripcion': cat['descripcion']}
+            )
+
+        # Tipos comunes
+        tipos_data = [
+            {'nombre': 'CI (Carnet de Identidad)', 'descripcion': 'Fotocopia del documento de identidad',
+             'es_requerido': True},
+            {'nombre': 'Certificado de Nacimiento', 'descripcion': '', 'es_requerido': True},
+            {'nombre': 'Contrato Individual', 'descripcion': 'Contrato firmado por ambas partes', 'es_requerido': True},
+            {'nombre': 'Evaluación de Desempeño', 'descripcion': 'Formato anual de evaluación', 'es_requerido': False},
+            {'nombre': 'Certificado de Curso', 'descripcion': 'Certificados de formación interna o externa',
+             'es_requerido': False}
+        ]
+
+        for tipo in tipos_data:
+            Tipo.objects.get_or_create(
+                nombre=tipo['nombre'],
+                empresa=empresa,
+                defaults={
+                    'descripcion': tipo['descripcion'],
+                    'es_requerido': tipo['es_requerido'],
+                    'activo': True
+                }
+            )
+
+    def crear_criterios_evaluacion(self, empresa):
+        criterios = [
+            {'nombre': 'Desempeño laboral', 'descripcion': 'Evaluación del rendimiento en el trabajo asignado'},
+            {'nombre': 'Conocimientos y habilidades', 'descripcion': 'Nivel de conocimientos técnicos y competencias'},
+            {'nombre': 'Responsabilidad y compromiso',
+             'descripcion': 'Cumplimiento de deberes y nivel de involucramiento'},
+            {'nombre': 'Adaptabilidad', 'descripcion': 'Capacidad para ajustarse a los cambios y nuevos entornos'}
+        ]
+
+        for crit in criterios:
+            CriterioEvaluacion.objects.get_or_create(
+                nombre=crit['nombre'],
+                empresa=empresa,
+                defaults={'descripcion': crit['descripcion']}
+            )

@@ -58,6 +58,9 @@ class CriterioEvaluacion(models.Model):
     descripcion = models.TextField()
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('nombre', 'empresa')
+
 class ResultadoEvaluacion(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE)
     criterio = models.ForeignKey(CriterioEvaluacion, on_delete=models.CASCADE)
