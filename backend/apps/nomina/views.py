@@ -16,12 +16,22 @@ from rest_framework import serializers
 from .serializers_pais import PaisSerializer
 
 class EstructuraSalarialViewSet(viewsets.ModelViewSet):
-    queryset = EstructuraSalarial.objects.all()
     serializer_class = EstructuraSalarialSerializer
 
+    def get_queryset(self):
+        empresa = getattr(self.request.user, "empresa", None)
+        if empresa is not None:
+            return EstructuraSalarial.objects.filter(empresa=empresa)
+        return EstructuraSalarial.objects.none()
+
 class ReglaSalarialViewSet(viewsets.ModelViewSet):
-    queryset = ReglaSalarial.objects.all()
     serializer_class = ReglaSalarialSerializer
+
+    def get_queryset(self):
+        empresa = getattr(self.request.user, "empresa", None)
+        if empresa is not None:
+            return ReglaSalarial.objects.filter(empresa=empresa)
+        return ReglaSalarial.objects.none()
 
 class BoletaPagoViewSet(viewsets.ModelViewSet):
     queryset = BoletaPago.objects.all()
