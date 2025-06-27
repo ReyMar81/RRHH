@@ -34,7 +34,22 @@ class EvaluacionPendienteSimpleSerializer(serializers.ModelSerializer):
         ]
 
     def get_evaluado_nombre(self, obj):
-        return f"{obj.evaluado.id} - {obj.evaluado.nombre} {obj.evaluado.apellidos}" if obj.evaluado else ""
+        return f"{obj.evaluado.nombre} {obj.evaluado.apellidos}" if obj.evaluado else ""
 
     def get_solicitador_nombre(self, obj):
-        return f"{obj.solicitador.id} - {obj.solicitador.nombre} {obj.solicitador.apellidos}" if obj.solicitador else ""
+        return f"{obj.solicitador.nombre} {obj.solicitador.apellidos}" if obj.solicitador else ""
+
+class ResultadoEvaluacionDetalleSerializer(serializers.ModelSerializer):
+    criterio_nombre = serializers.CharField(source='criterio.nombre', read_only=True)
+    criterio_descripcion = serializers.CharField(source='criterio.descripcion', read_only=True)
+
+    class Meta:
+        model = ResultadoEvaluacion
+        fields = [
+            'id',
+            'criterio',
+            'criterio_nombre',
+            'criterio_descripcion',
+            'puntaje',
+            'comentario',
+        ]

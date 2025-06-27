@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from .models import Evaluacion, CriterioEvaluacion, ResultadoEvaluacion
-from .serializer import EvaluacionSerializer, CriterioEvaluacionSerializer, ResultadoEvaluacionSerializer, EvaluacionPendienteSimpleSerializer
+from .serializer import EvaluacionSerializer, CriterioEvaluacionSerializer, ResultadoEvaluacionSerializer, EvaluacionPendienteSimpleSerializer, ResultadoEvaluacionDetalleSerializer
 
 from apps.empleado.models import Empleado
 from apps.horas_extras.models import Aprobadores
@@ -132,20 +132,6 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @extend_schema(
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "fecha_fin": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "01-07-2025",
-                        "description": "Fecha de fin de la evaluación (DD-MM-YYYY)"
-                    }
-                },
-                "required": ["fecha_fin"]
-            }
-        },
         responses={200: OpenApiResponse(description="Evaluación aceptada", examples=[{"mensaje": "Evaluación aceptada, puede comenzar a completarla"}])},
         summary="Aceptar evaluación"
     )
@@ -161,17 +147,8 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         if not evaluacion.puede_ser_evaluado_por(evaluador):
             return Response({'error': 'No tiene permisos para tomar esta evaluación'}, status=403)
 
-        fecha_fin_str = request.data.get('fecha_fin')
-        try:
-            fecha_fin = datetime.strptime(fecha_fin_str, '%d-%m-%Y') 
-        except (TypeError, ValueError):
-            return Response({'error': 'Formato de fecha inválido. Use DD-MM-MMMM'}, status=400)
-
-        if not fecha_fin:
-            return Response({'error': 'Debe enviar una fecha de fin'}, status=400)
         evaluacion.evaluador = evaluador
         evaluacion.fecha_inicio = timezone.now()
-        evaluacion.fecha_fin = fecha_fin
         evaluacion.estado = 'en proceso'
         evaluacion.save()
         return Response({'mensaje': 'Evaluación aceptada, puede comenzar a completarla'})
@@ -207,15 +184,20 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     def evaluaciones_en_proceso_de_un_aprobador(self, request):
         try:
             empleado = Empleado.objects.get(user_id=request.user)
-        except empleado.DoesNotExist:
+        except Empleado.DoesNotExist:
             return Response({'error': 'Empleado no encontrado'}, status=404)
         evaluaciones = Evaluacion.objects.filter(
             estado='en proceso',
-            evaluador = empleado,
-            empresa = empleado.empresa
+            evaluador=empleado,
+            empresa=empleado.empresa
         )
-        serializer = self.get_serializer(evaluaciones, many=True)
-        return Response(serializer.data)
+        # Serializa y añade el nombre del evaluado
+        data = []
+        for evaluacion in evaluaciones:
+            evaluacion_data = self.get_serializer(evaluacion).data
+            evaluacion_data['evaluado_nombre'] = f"{evaluacion.evaluado.nombre} {evaluacion.evaluado.apellidos}"
+            data.append(evaluacion_data)
+        return Response(data)
 
     @extend_schema(
         request={
@@ -223,7 +205,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
                 "type": "object",
                 "properties": {
                     "criterio_id": {"type": "integer", "description": "ID del criterio de evaluación"},
-                    "puntaje": {"type": "integer", "description": "Puntaje asignado"},
+                    "puntaje": {"type": "string", "description": "Puntaje asignado"},
                     "comentario": {"type": "string", "description": "Comentario", "nullable": True}
                 },
                 "required": ["criterio_id", "puntaje"]
@@ -338,7 +320,28 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
 
         return Response({'mensaje': 'Evaluación completada exitosamente'})
 
+    @action(detail=True, methods=['get'], url_path='criterios-no-evaluados')
+    def criterios_no_evaluados(self, request, pk=None):
+        evaluacion = self.get_object()
+        criterios_empresa = CriterioEvaluacion.objects.filter(empresa=evaluacion.empresa)
+        criterios_evaluados = ResultadoEvaluacion.objects.filter(evaluacion=evaluacion).values_list('criterio_id', flat=True)
+        criterios_pendientes = criterios_empresa.exclude(id__in=criterios_evaluados)
+        data = [
+            {
+                'id': c.id,
+                'nombre': c.nombre,
+                'descripcion': c.descripcion,
+            }
+            for c in criterios_pendientes
+        ]
+        return Response(data)
 
+    @action(detail=True, methods=['get'], url_path='resultados')
+    def resultados_evaluacion(self, request, pk=None):
+        evaluacion = self.get_object()
+        resultados = ResultadoEvaluacion.objects.filter(evaluacion=evaluacion)
+        serializer = ResultadoEvaluacionDetalleSerializer(resultados, many=True)
+        return Response(serializer.data)
 
 class CriterioEvaluacionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
