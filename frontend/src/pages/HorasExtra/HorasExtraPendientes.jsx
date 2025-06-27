@@ -75,8 +75,6 @@ const HorasExtraPendientes = () => {
     return (
         <div className="container mt-4">
             <h2 className="mb-4">Horas Extra Pendientes</h2>
-            {error && <Alert variant="danger">{error}</Alert>}
-            {success && <Alert variant="success">{success}</Alert>}
             <Table striped bordered hover>
                 <thead className="table-primary">
                     <tr>
@@ -132,10 +130,10 @@ const HorasExtraPendientes = () => {
                     />
                     {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={idx} disabled />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={item}
+                                key={`page-${item}-${idx}`} // <-- Clave única
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >

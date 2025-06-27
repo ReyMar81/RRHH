@@ -283,10 +283,10 @@ const Asistencia = () => {
                     />
                     {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={idx} disabled />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={item}
+                                key={`page-${item}-${idx}`} // <-- Clave única
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >

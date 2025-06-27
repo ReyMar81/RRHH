@@ -10,6 +10,7 @@ const Dashboard = () => {
     const [documentosOpen, setDocumentosOpen] = useState(false); // Añade este estado junto a los otros
     const [nominaOpen, setNominaOpen] = useState(false); // Añade este estado junto a los otros
     const [horasExtraOpen, setHorasExtraOpen] = useState(false); // Agrega este estado junto a los otros
+    const [evaluacionesOpen, setEvaluacionesOpen] = useState(false); // Agrega este estado
     const navigate = useNavigate();
 
     // Manejar el cierre de sesión
@@ -190,6 +191,35 @@ const Dashboard = () => {
                         )}
                     </li>
                     {/* Fin Submenú Horas Extra */}
+                    {/* Submenú Evaluaciones */}
+                    <li className="nav-item">
+                        <button
+                            className="nav-link text-white p-3 d-flex align-items-center w-100 bg-transparent border-0"
+                            style={{ textAlign: "left" }}
+                            onClick={() => setEvaluacionesOpen(!evaluacionesOpen)}
+                        >
+                            <i className="bi bi-clipboard-check"></i>
+                            <span className="ms-2 flex-grow-1">Evaluaciones</span>
+                            <i className={`bi ms-auto ${evaluacionesOpen ? "bi-caret-down-fill" : "bi-caret-right-fill"}`}></i>
+                        </button>
+                        {evaluacionesOpen && (
+                            <ul className="nav flex-column ms-4">
+                                <li className="nav-item">
+                                    <Link to="evaluaciones" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-list-check"></i>
+                                        <span className="ms-2">Evaluaciones</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="criterios" className="nav-link text-white p-2 d-flex align-items-center">
+                                        <i className="bi bi-ui-checks"></i>
+                                        <span className="ms-2">Criterios</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
+                    </li>
+                    {/* Fin Submenú Evaluaciones */}
                     <li className="nav-item">
                         <Link to="perfil" className="nav-link text-white p-3 d-flex align-items-center">
                             <i className="bi bi-person-circle"></i>

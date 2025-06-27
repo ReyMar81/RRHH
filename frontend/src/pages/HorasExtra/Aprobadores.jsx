@@ -19,11 +19,16 @@ const getPaginationItems = (pagina, totalPaginas) => {
     return items;
 };
 
+const TIPOS_ENCARGADO = [
+    { value: "hora_extra", label: "Encargado de Horas Extra" },
+    { value: "evaluacion", label: "Encargado de Evaluaciones" },
+];
+
 const Aprobadores = () => {
     const [empleados, setEmpleados] = useState([]);
     const [departamentos, setDepartamentos] = useState([]);
     const [aprobadores, setAprobadores] = useState([]);
-    const [form, setForm] = useState({ empleado: "", departamento: "" });
+    const [form, setForm] = useState({ empleado: "", departamento: "", encargado_de: "hora_extra" });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     // PAGINACIÓN
@@ -58,44 +63,44 @@ const Aprobadores = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // Agregar aprobador
+    // Agregar aprobador/evaluador
     const handleAgregar = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess("");
-        if (!form.empleado || !form.departamento) {
-            setError("Seleccione empleado y departamento.");
+        if (!form.empleado || !form.departamento || !form.encargado_de) {
+            setError("Seleccione todos los campos.");
             return;
         }
         try {
             await apiClient.post("Aprobadores/", {
-                encargado_de: "hora_extra",
+                encargado_de: form.encargado_de,
                 empleado: form.empleado,
                 departamento: form.departamento,
             });
-            setSuccess("Aprobador agregado correctamente.");
-            setForm({ empleado: "", departamento: "" });
+            setSuccess("Encargado agregado correctamente.");
+            setForm({ empleado: "", departamento: "", encargado_de: "hora_extra" });
             // Refrescar lista
             const res = await apiClient.get("Aprobadores/");
             setAprobadores(res.data);
         } catch (err) {
-            setError("Error al agregar aprobador.");
+            setError("Error al agregar encargado.");
         }
     };
 
-    // Eliminar aprobador
+    // Eliminar encargado
     const handleEliminar = async (id) => {
-        if (!window.confirm("¿Seguro que deseas eliminar este aprobador?")) return;
+        if (!window.confirm("¿Seguro que deseas eliminar este encargado?")) return;
         setError("");
         setSuccess("");
         try {
             await apiClient.delete(`Aprobadores/${id}/`);
-            setSuccess("Aprobador eliminado correctamente.");
+            setSuccess("Encargado eliminado correctamente.");
             // Refrescar lista
             const res = await apiClient.get("Aprobadores/");
             setAprobadores(res.data);
         } catch (err) {
-            setError("Error al eliminar aprobador.");
+            setError("Error al eliminar encargado.");
         }
     };
 
@@ -108,10 +113,14 @@ const Aprobadores = () => {
         const dep = departamentos.find(d => d.id === (typeof id === "object" ? id.id : id));
         return dep ? dep.nombre : id;
     };
+    const getTipoEncargado = (tipo) => {
+        const found = TIPOS_ENCARGADO.find(t => t.value === tipo);
+        return found ? found.label : tipo;
+    };
 
     return (
         <div className="container mt-4">
-            <h2 className="mb-4">Aprobadores</h2>
+            <h2 className="mb-4">Encargados (Aprobadores/Evaluadores)</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
             <Form className="d-flex gap-2 mb-3 align-items-end" onSubmit={handleAgregar}>
@@ -147,6 +156,21 @@ const Aprobadores = () => {
                         ))}
                     </Form.Select>
                 </Form.Group>
+                <Form.Group>
+                    <Form.Label>Tipo de Encargado</Form.Label>
+                    <Form.Select
+                        name="encargado_de"
+                        value={form.encargado_de}
+                        onChange={handleChange}
+                        required
+                    >
+                        {TIPOS_ENCARGADO.map(tipo => (
+                            <option key={tipo.value} value={tipo.value}>
+                                {tipo.label}
+                            </option>
+                        ))}
+                    </Form.Select>
+                </Form.Group>
                 <Button type="submit" variant="primary" className="ms-2">
                     Agregar +
                 </Button>
@@ -156,14 +180,15 @@ const Aprobadores = () => {
                     <tr>
                         <th>Empleado</th>
                         <th>Departamento</th>
+                        <th>Tipo de Encargado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {aprobadoresPagina.length === 0 ? (
                         <tr>
-                            <td colSpan={3} className="text-center text-muted">
-                                No hay aprobadores registrados.
+                            <td colSpan={4} className="text-center text-muted">
+                                No hay encargados registrados.
                             </td>
                         </tr>
                     ) : (
@@ -171,6 +196,7 @@ const Aprobadores = () => {
                             <tr key={a.id}>
                                 <td>{getEmpleadoNombre(a.empleado)}</td>
                                 <td>{getDepartamentoNombre(a.departamento)}</td>
+                                <td>{getTipoEncargado(a.encargado_de)}</td>
                                 <td>
                                     <Button
                                         variant="danger"
@@ -194,10 +220,10 @@ const Aprobadores = () => {
                     />
                     {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={idx} disabled />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={item}
+                                key={`page-${item}-${idx}`} // <-- Clave única
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >

@@ -26,6 +26,8 @@ import Nomina from './pages/Nomina/Nomina';
 import Aprobadores from './pages/HorasExtra/Aprobadores';
 import HorasExtraPendientes from './pages/HorasExtra/HorasExtraPendientes';
 import HistorialHorasExtra from './pages/HorasExtra/HistorialHorasExtra';
+import Evaluaciones from './pages/Evaluaciones/Evaluaciones';
+import Criterios from './pages/Evaluaciones/Criterios';
 
 function App() {
   return (
@@ -58,6 +60,8 @@ function App() {
           <Route path="aprobadores" element={<Aprobadores />} />
           <Route path="horas_extra_pendientes" element={<HorasExtraPendientes />} />
           <Route path="historial_horas_extra" element={<HistorialHorasExtra />} />
+          <Route path="evaluaciones" element={<Evaluaciones />} />
+          <Route path="criterios" element={<Criterios />} />
 
         </Route>
         <Route path="/login" element={<ThemeProvider><Login /> </ThemeProvider>}/>

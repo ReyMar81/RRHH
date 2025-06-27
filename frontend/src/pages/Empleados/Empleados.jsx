@@ -324,13 +324,13 @@ const Empleados = () => {
                 <Pagination>
                     <Pagination.First onClick={() => setPaginaActual(1)} />
                     <Pagination.Prev onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))} />
-                    {getPaginationItems(paginaActual, totalPaginas).map((item, index) =>
+                    {getPaginationItems(paginaActual, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={index} />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={index}
-                                active={item === paginaActual}
+                                key={`page-${item}-${idx}`} // <-- Clave única
+                                active={paginaActual === item}
                                 onClick={() => setPaginaActual(item)}
                             >
                                 {item}

@@ -26,31 +26,45 @@ function Login() {
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
 
-            // Decodificar el token para saber si es superadmin
             const decoded = jwtDecode(response.data.access);
-            console.log("Token decodificado:", decoded); // <-- Ya tienes esto
-            console.log("¿Es superusuario?:", decoded.is_superuser); // <-- Agrega esta línea
+            console.log("Token decodificado:", decoded);
+            console.log("¿Es superusuario?:", decoded.is_superuser);
 
-            if (decoded.is_superuser === true) {
-                navigate('/admindashboard');
-                return; // Esto detiene la función aquí
+            if (decoded.is_superuser) {
+                // Lógica para superusuario (puedes redirigir a admin dashboard si lo deseas)
+                navigate('/dashboard');
+                setTimeout(() => window.location.reload(), 100);
+                return;
             }
 
-            // Si no es superadmin, buscar empresa y redirigir a dashboard
-            const empresaResponse = await axios.get(`${Apiurl}empresas/`, {
-                headers: {
-                    Authorization: `Bearer ${response.data.access}`,
-                },
-            });
+            // Si no es superusuario, intentar obtener la empresa
+            try {
+                const empresaResponse = await axios.get(`${Apiurl}empresas/`, {
+                    headers: {
+                        Authorization: `Bearer ${response.data.access}`,
+                    },
+                });
 
-            if (empresaResponse.data.length > 0) {
-                localStorage.setItem('empresa_id', empresaResponse.data[0].id);
-                navigate('/dashboard');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 100);
-            } else {
-                setError('No tiene empresa asociada.');
+                if (empresaResponse.data.length > 0) {
+                    localStorage.setItem('empresa_id', empresaResponse.data[0].id);
+                    navigate('/dashboard');
+                    setTimeout(() => window.location.reload(), 100);
+                } else if (decoded.empresa) {
+                    localStorage.setItem('empresa_id', decoded.empresa); // <-- Cambia aquí
+                    navigate('/dashboard');
+                    setTimeout(() => window.location.reload(), 100);
+                } else {
+                    setError('No tiene empresa asociada.');
+                }
+            } catch (err) {
+                // Si falla el endpoint pero el token tiene empresa, permitir acceso
+                if (decoded.empresa) { // <-- Cambia aquí
+                    localStorage.setItem('empresa_id', decoded.empresa); // <-- Cambia aquí
+                    navigate('/dashboard');
+                    setTimeout(() => window.location.reload(), 100);
+                } else {
+                    setError('No tiene empresa asociada.');
+                }
             }
         } catch (error) {
             setError('Credenciales inválidas. Por favor, inténtelo de nuevo.');

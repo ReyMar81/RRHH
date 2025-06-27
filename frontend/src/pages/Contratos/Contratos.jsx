@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
+import { Table, Button, Modal, Form, Pagination, Row, Col } from "react-bootstrap";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -34,6 +34,8 @@ const Contratos = () => {
         observaciones: "",
         empleado: "",
         cargo_departamento: "",
+        evaluacion_periodicidad: "", // NUEVO
+        ultima_evaluacion_programada: "", // NUEVO
     });
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -78,8 +80,6 @@ const Contratos = () => {
     // Manejar cambios en el formulario
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // Limpiar fecha_fin si el tipo de contrato es "INDEFINIDO"
         if (name === "tipo_contrato" && value === "INDEFINIDO") {
             setFormData({ ...formData, [name]: value, fecha_fin: "" });
         } else {
@@ -106,12 +106,20 @@ const Contratos = () => {
             return;
         }
 
+        // Transformar días a formato requerido por el backend
+        let evaluacion_periodicidad = formData.evaluacion_periodicidad;
+        if (evaluacion_periodicidad) {
+            evaluacion_periodicidad = `${evaluacion_periodicidad} 00:00:00`;
+        }
+
         try {
             const dataToSend = {
                 ...formData,
-                fecha_fin: formData.fecha_fin || null, // Enviar null si fecha_fin está vacío
+                fecha_fin: formData.fecha_fin || null,
                 salario_personalizado: salarioFinal,
-                empresa_id: empresaId, // Asociar el contrato a la empresa
+                empresa_id: empresaId,
+                evaluacion_periodicidad: evaluacion_periodicidad || null, // Transformado
+                ultima_evaluacion_programada: formData.ultima_evaluacion_programada || null,
             };
 
             if (isEditing) {
@@ -151,6 +159,8 @@ const Contratos = () => {
             observaciones: "",
             empleado: "",
             cargo_departamento: "",
+            evaluacion_periodicidad: "", // NUEVO
+            ultima_evaluacion_programada: "", // NUEVO
         });
         setIsEditing(false);
         setEditId(null);
@@ -272,10 +282,10 @@ const Contratos = () => {
                     />
                     {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={idx} disabled />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={item}
+                                key={`page-${item}-${idx}`} // Clave única usando valor e índice
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >
@@ -305,130 +315,169 @@ const Contratos = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
-                        {/* Campos del formulario */}
-                        <Form.Group className="mb-3">
-                            <Form.Label>Empleado</Form.Label>
-                            <Form.Control
-                                list="empleados-list"
-                                name="empleado_nombre"
-                                value={
-                                    empleados.find(e => String(e.id) === String(formData.empleado))
-                                        ? `${empleados.find(e => String(e.id) === String(formData.empleado)).nombre} ${empleados.find(e => String(e.id) === String(formData.empleado)).apellidos}`
-                                        : formData.empleado_nombre || ""
-                                }
-                                onChange={e => {
-                                    const texto = e.target.value;
-                                    // Buscar si el texto coincide con algún empleado
-                                    const emp = empleados.find(
-                                        emp =>
-                                            `${emp.nombre} ${emp.apellidos}`.toLowerCase() === texto.toLowerCase()
-                                    );
-                                    if (emp) {
-                                        setFormData({ ...formData, empleado: emp.id, empleado_nombre: texto });
-                                    } else {
-                                        setFormData({ ...formData, empleado: "", empleado_nombre: texto });
-                                    }
-                                }}
-                                required
-                                placeholder="Buscar o seleccionar empleado..."
-                                autoComplete="off"
-                            />
-                            <datalist id="empleados-list">
-                                {empleados.map((empleado) => (
-                                    <option
-                                        key={empleado.id}
-                                        value={`${empleado.nombre} ${empleado.apellidos}`}
+                        <Row as={Row} className="g-3">
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Empleado</Form.Label>
+                                    <Form.Control
+                                        list="empleados-list"
+                                        name="empleado_nombre"
+                                        value={
+                                            empleados.find(e => String(e.id) === String(formData.empleado))
+                                                ? `${empleados.find(e => String(e.id) === String(formData.empleado)).nombre} ${empleados.find(e => String(e.id) === String(formData.empleado)).apellidos}`
+                                                : formData.empleado_nombre || ""
+                                        }
+                                        onChange={e => {
+                                            const texto = e.target.value;
+                                            const emp = empleados.find(
+                                                emp =>
+                                                    `${emp.nombre} ${emp.apellidos}`.toLowerCase() === texto.toLowerCase()
+                                            );
+                                            if (emp) {
+                                                setFormData({ ...formData, empleado: emp.id, empleado_nombre: texto });
+                                            } else {
+                                                setFormData({ ...formData, empleado: "", empleado_nombre: texto });
+                                            }
+                                        }}
+                                        required
+                                        placeholder="Buscar o seleccionar empleado..."
+                                        autoComplete="off"
                                     />
-                                ))}
-                            </datalist>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Cargo</Form.Label>
-                            <Form.Select
-                                name="cargo_departamento"
-                                value={formData.cargo_departamento}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Seleccione un cargo</option>
-                                {cargos.map((cargo) => (
-                                    <option key={cargo.id} value={cargo.id}>
-                                        {cargo.nombre}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Tipo de Contrato</Form.Label>
-                            <Form.Select
-                                name="tipo_contrato"
-                                value={formData.tipo_contrato}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Seleccione un tipo de contrato</option>
-                                <option value="INDEFINIDO">Indefinido</option>
-                                <option value="PLAZO FIJO">Plazo fijo</option>
-                                <option value="MEDIO TIEMPO">Medio tiempo</option>
-                                <option value="PASANTIA">Pasantía</option>
-                            </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Estado</Form.Label>
-                            <Form.Select
-                                name="estado"
-                                value={formData.estado}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Seleccione un estado</option>
-                                <option value="ACTIVO">Activo</option>
-                                <option value="FINALIZADO">Finalizado</option>
-                                <option value="PENDIENTE">Pendiente</option>
-                                <option value="RENOVADO">Renovado</option>
-                            </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Fecha Inicio</Form.Label>
-                            <Form.Control
-                                type="date"
-                                name="fecha_inicio"
-                                value={formData.fecha_inicio}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
-                        {/* Mostrar el campo de Fecha Fin solo si el tipo de contrato no es indefinido */}
-                        {formData.tipo_contrato !== "INDEFINIDO" && (
-                            <Form.Group className="mb-3">
-                                <Form.Label>Fecha Fin</Form.Label>
-                                <Form.Control
-                                    type="date"
-                                    name="fecha_fin"
-                                    value={formData.fecha_fin}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                        )}
-                        <Form.Group className="mb-3">
-                            <Form.Label>Salario Personalizado</Form.Label>
-                            <Form.Control
-                                type="number"
-                                name="salario_personalizado"
-                                value={formData.salario_personalizado}
-                                onChange={handleChange}
-                                step="0.01"
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Observaciones</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                name="observaciones"
-                                value={formData.observaciones}
-                                onChange={handleChange}
-                            />
-                        </Form.Group>
+                                    <datalist id="empleados-list">
+                                        {empleados.map((empleado) => (
+                                            <option
+                                                key={empleado.id}
+                                                value={`${empleado.nombre} ${empleado.apellidos}`}
+                                            />
+                                        ))}
+                                    </datalist>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Cargo</Form.Label>
+                                    <Form.Select
+                                        name="cargo_departamento"
+                                        value={formData.cargo_departamento}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Seleccione un cargo</option>
+                                        {cargos.map((cargo) => (
+                                            <option key={cargo.id} value={cargo.id}>
+                                                {cargo.nombre}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Tipo de Contrato</Form.Label>
+                                    <Form.Select
+                                        name="tipo_contrato"
+                                        value={formData.tipo_contrato}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Seleccione un tipo de contrato</option>
+                                        <option value="INDEFINIDO">Indefinido</option>
+                                        <option value="PLAZO FIJO">Plazo fijo</option>
+                                        <option value="MEDIO TIEMPO">Medio tiempo</option>
+                                        <option value="PASANTIA">Pasantía</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Estado</Form.Label>
+                                    <Form.Select
+                                        name="estado"
+                                        value={formData.estado}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Seleccione un estado</option>
+                                        <option value="ACTIVO">Activo</option>
+                                        <option value="FINALIZADO">Finalizado</option>
+                                        <option value="PENDIENTE">Pendiente</option>
+                                        <option value="RENOVADO">Renovado</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Fecha Inicio</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        name="fecha_inicio"
+                                        value={formData.fecha_inicio}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                {formData.tipo_contrato !== "INDEFINIDO" && (
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Fecha Fin</Form.Label>
+                                        <Form.Control
+                                            type="date"
+                                            name="fecha_fin"
+                                            value={formData.fecha_fin}
+                                            onChange={handleChange}
+                                        />
+                                    </Form.Group>
+                                )}
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Salario Personalizado</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        name="salario_personalizado"
+                                        value={formData.salario_personalizado}
+                                        onChange={handleChange}
+                                        step="0.01"
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Evaluación Periodicidad</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        min="1"
+                                        name="evaluacion_periodicidad"
+                                        value={formData.evaluacion_periodicidad}
+                                        onChange={handleChange}
+                                        placeholder="Dias: 30"
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Última Evaluación Programada</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        name="ultima_evaluacion_programada"
+                                        value={formData.ultima_evaluacion_programada}
+                                        onChange={handleChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Observaciones</Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        name="observaciones"
+                                        value={formData.observaciones}
+                                        onChange={handleChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
                         <div className="d-flex justify-content-between">
                             {isEditing && (
                                 <Button

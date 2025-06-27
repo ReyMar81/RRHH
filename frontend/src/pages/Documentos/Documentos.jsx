@@ -27,6 +27,7 @@ const Documentos = () => {
     const [categorias, setCategorias] = useState([]);
     const [empleados, setEmpleados] = useState([]);
     const [contratos, setContratos] = useState([]);
+    const [contratosFiltrados, setContratosFiltrados] = useState([]);
     const [formData, setFormData] = useState({
         titulo: "",
         tipo_id: "",
@@ -185,12 +186,13 @@ const Documentos = () => {
             tipo_id: "",
             categoria_id: "",
             empleado_id: "",
-            empleado_nombre: "", // <-- Nuevo campo auxiliar
+            empleado_nombre: "",
             contrato_id: "",
         });
         setFile(null);
         setIsEditing(false);
         setEditId(null);
+        setContratosFiltrados([]);
     };
 
     // Cargar datos al montar el componente
@@ -296,10 +298,10 @@ const Documentos = () => {
                     />
                     {getPaginationItems(pagina, totalPaginas).map((item, idx) =>
                         item === "..." ? (
-                            <Pagination.Ellipsis key={idx} disabled />
+                            <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={item}
+                                key={`page-${item}-${idx}`} // <-- Clave única
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >
@@ -384,15 +386,17 @@ const Documentos = () => {
                                 }
                                 onChange={e => {
                                     const texto = e.target.value;
-                                    // Buscar si el texto coincide con algún empleado
                                     const emp = empleados.find(
                                         emp =>
                                             `${emp.nombre} ${emp.apellidos}`.toLowerCase() === texto.toLowerCase()
                                     );
                                     if (emp) {
-                                        setFormData({ ...formData, empleado_id: emp.id, empleado_nombre: texto });
+                                        setFormData({ ...formData, empleado_id: emp.id, empleado_nombre: texto, contrato_id: "" });
+                                        // Filtrar contratos de este empleado
+                                        setContratosFiltrados(contratos.filter(c => String(c.empleado) === String(emp.id)));
                                     } else {
-                                        setFormData({ ...formData, empleado_id: "", empleado_nombre: texto });
+                                        setFormData({ ...formData, empleado_id: "", empleado_nombre: texto, contrato_id: "" });
+                                        setContratosFiltrados([]);
                                     }
                                 }}
                                 required
@@ -408,21 +412,23 @@ const Documentos = () => {
                                 ))}
                             </datalist>
                         </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Contrato</Form.Label>
-                            <Form.Select
-                                name="contrato_id"
-                                value={formData.contrato_id}
-                                onChange={handleChange}
-                            >
-                                <option value="">Seleccione un contrato</option>
-                                {contratos.map((contrato) => (
-                                    <option key={contrato.id} value={contrato.id}>
-                                        {contrato.tipo_contrato}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Form.Group>
+                        {formData.empleado_id && (
+                            <Form.Group className="mb-3">
+                                <Form.Label>Contrato</Form.Label>
+                                <Form.Select
+                                    name="contrato_id"
+                                    value={formData.contrato_id}
+                                    onChange={handleChange}
+                                >
+                                    <option value="">Seleccione un contrato</option>
+                                    {contratosFiltrados.map((contrato) => (
+                                        <option key={contrato.id} value={contrato.id}>
+                                            {contrato.tipo_contrato}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        )}
                         <Form.Group className="mb-3">
                             <Form.Label>Archivo</Form.Label>
                             <Form.Control
