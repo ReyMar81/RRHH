@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/Apirest";
-import { Table, Button, Form, Row, Col, Pagination, Alert } from "react-bootstrap";
+import { Table, Button, Alert, Pagination } from "react-bootstrap";
 
 const getPaginationItems = (pagina, totalPaginas) => {
     let items = [];
@@ -20,66 +20,75 @@ const getPaginationItems = (pagina, totalPaginas) => {
 
 const Evaluaciones = () => {
     const [evaluaciones, setEvaluaciones] = useState([]);
-    const [busqueda, setBusqueda] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [pagina, setPagina] = useState(1);
     const porPagina = 10;
-    const [error, setError] = useState("");
+
+    // Obtener evaluaciones pendientes de aprobar
+    const fetchEvaluaciones = async () => {
+        setError("");
+        try {
+            const res = await apiClient.get("evaluaciones/pendientes-evaluar/");
+            setEvaluaciones(res.data);
+        } catch (err) {
+            setError("Error al cargar evaluaciones pendientes.");
+        }
+    };
 
     useEffect(() => {
         fetchEvaluaciones();
     }, []);
 
-    const fetchEvaluaciones = async () => {
+    // Aprobar evaluación
+    const aprobarEvaluacion = async (id) => {
+        setError("");
+        setSuccess("");
         try {
-            // Puedes cambiar el endpoint según lo que quieras mostrar (todas, finalizadas, pendientes, etc.)
-            const res = await apiClient.get("evaluaciones/");
-            setEvaluaciones(res.data);
+            await apiClient.patch(`evaluaciones/${id}/aceptar/`);
+            setSuccess("Evaluación aceptada.");
+            fetchEvaluaciones();
         } catch (err) {
-            setError("Error al cargar evaluaciones.");
+            setError(
+                err.response?.data?.error ||
+                "No tienes permisos o hubo un error al aprobar la evaluación."
+            );
         }
     };
 
-    // Filtro por nombre de evaluado
-    const evaluacionesFiltradas = evaluaciones.filter((e) => {
-        if (!busqueda.trim()) return true;
-        const nombre = e.evaluado_nombre || "";
-        return nombre.toLowerCase().includes(busqueda.toLowerCase());
-    });
+    // Rechazar evaluación (puedes implementar lógica específica si tu backend lo permite)
+    const rechazarEvaluacion = (id) => {
+        // Aquí podrías llamar a un endpoint de rechazo si existe, o simplemente ocultar la evaluación.
+        setEvaluaciones(evaluaciones.filter(e => e.id !== id));
+        setSuccess("Evaluación rechazada (solo ocultada en frontend).");
+    };
 
+    // Paginación
     const inicio = (pagina - 1) * porPagina;
     const fin = inicio + porPagina;
-    const evaluacionesPagina = evaluacionesFiltradas.slice(inicio, fin);
-    const totalPaginas = Math.ceil(evaluacionesFiltradas.length / porPagina);
+    const evaluacionesPagina = evaluaciones.slice(inicio, fin);
+    const totalPaginas = Math.ceil(evaluaciones.length / porPagina);
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4">Evaluaciones</h1>
+            <h2 className="mb-4">Evaluaciones Pendientes</h2>
             {error && <Alert variant="danger">{error}</Alert>}
-            <Row className="mb-3">
-                <Col md={6}>
-                    <Form.Control
-                        type="text"
-                        placeholder="Buscar por nombre de evaluado..."
-                        value={busqueda}
-                        onChange={e => setBusqueda(e.target.value)}
-                    />
-                </Col>
-            </Row>
-            <Table striped bordered hover responsive>
+            {success && <Alert variant="success">{success}</Alert>}
+            <Table striped bordered hover>
                 <thead className="table-primary">
                     <tr>
                         <th>Evaluado</th>
                         <th>Solicitador</th>
                         <th>Motivo</th>
-                        <th>Estado</th>
                         <th>Fecha creación</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {evaluacionesPagina.length === 0 ? (
                         <tr>
                             <td colSpan={5} className="text-center text-muted">
-                                No hay evaluaciones.
+                                No hay evaluaciones pendientes.
                             </td>
                         </tr>
                     ) : (
@@ -88,13 +97,32 @@ const Evaluaciones = () => {
                                 <td>{e.evaluado_nombre || "—"}</td>
                                 <td>{e.solicitador_nombre || "—"}</td>
                                 <td>{e.motivo || "—"}</td>
-                                <td>{e.estado}</td>
                                 <td>{e.fecha_creacion ? new Date(e.fecha_creacion).toLocaleDateString() : "—"}</td>
+                                <td>
+                                    <Button
+                                        variant="success"
+                                        size="sm"
+                                        className="me-2"
+                                        onClick={() => aprobarEvaluacion(e.id)}
+                                        title="Aprobar"
+                                    >
+                                        ✔
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() => rechazarEvaluacion(e.id)}
+                                        title="Rechazar"
+                                    >
+                                        ✖
+                                    </Button>
+                                </td>
                             </tr>
                         ))
                     )}
                 </tbody>
             </Table>
+            {/* Paginación estética */}
             {totalPaginas > 1 && (
                 <Pagination className="justify-content-center">
                     <Pagination.Prev
@@ -106,7 +134,7 @@ const Evaluaciones = () => {
                             <Pagination.Ellipsis key={`ellipsis-${idx}`} disabled />
                         ) : (
                             <Pagination.Item
-                                key={`page-${item}-${idx}`} // <-- Clave única
+                                key={`page-${item}-${idx}`}
                                 active={pagina === item}
                                 onClick={() => setPagina(item)}
                             >
