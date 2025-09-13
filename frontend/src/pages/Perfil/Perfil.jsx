@@ -28,7 +28,7 @@ const Perfil = () => {
             <h2>Perfil de Usuario</h2>
             <div className="informacion-usuario">
                 <p><FaUser className="icon" /><strong>Usuario:</strong> {user.username}</p>
-                <p><FaEnvelope className="icon" /><strong>Email:</strong> {user.email}</p>
+                <p><FaEnvelope className="icon" /><strong>Correo:</strong> {user.email}</p>
                 <p><FaUserShield className="icon" /><strong>Cargo:</strong> {user.groups && user.groups.join(', ')}</p>
             </div>
             <ThemeCustomizer />
